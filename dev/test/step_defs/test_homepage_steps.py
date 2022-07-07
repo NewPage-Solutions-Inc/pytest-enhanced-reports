@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 
 
 # Scenarios
+from dev.test.step_defs.conftest import take_screenshot
+
 scenarios('../features/homepage.feature')
 
 # Locators
@@ -21,56 +23,47 @@ def user_login(browser):
     LoginPage(browser).set_username(properties.VALID_USER)
     LoginPage(browser).set_password(properties.VALID_PASS)
     LoginPage(browser).click_login()
-    allure.attach(browser.get_screenshot_as_png(), name="HomePageScreenAfterLogin",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "HomePageScreenAfterLogin")
 
 
 @when(parsers.parse('The user clicks on tab "{tab}"'))
 def click_tab(browser, tab):
-    allure.attach(browser.get_screenshot_as_png(), name="clickingTab",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "clickingTab")
     HomePage(browser).click_tab(tab)
 
 
 @then(parsers.parse('The user enters "{username}" into username search'))
 def enter_username_search(browser, username):
     HomePage(browser).enter_username(username)
-    allure.attach(browser.get_screenshot_as_png(), name="searchUserName",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "searchUserName")
 
 
 @then("User clicks on search button")
 def click_search(browser):
     HomePage(browser).click_search()
-    allure.attach(browser.get_screenshot_as_png(), name="ClickSearch",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "ClickSearch")
 
 
 @then(parsers.parse('The value "{row_value}" is present'))
 def check_value(browser, row_value):
     actual_value = browser.find_element(*ROW_VALUE).text
-    allure.attach(browser.get_screenshot_as_png(), name="ValueVerification",
-                  attachment_type=AttachmentType.PNG)
-
+    take_screenshot(browser, "ValueVerification")
     assert actual_value == row_value
 
 
 @when("User clicks on profile button")
 def click_profile(browser):
     HomePage(browser).click_profile_bar()
-    allure.attach(browser.get_screenshot_as_png(), name="ClickingProfile",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "ClickingProfile")
 
 
 @when("User clicks on logout button")
 def click_logout(browser):
     HomePage(browser).click_logout()
-    allure.attach(browser.get_screenshot_as_png(), name="Logout",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "Logout")
 
 
 @then('the home page is displayed')
 def login_page_display(browser):
-    allure.attach(browser.get_screenshot_as_png(), name="HomePageScreen",
-                  attachment_type=AttachmentType.PNG)
+    take_screenshot(browser, "HomePageScreen")
     assert browser.find_element_by_id('txtUsername').is_displayed()

@@ -14,7 +14,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
     print("-------This is after step method-------")
     print(f'Step Name: {step}')
+    return step
     #allure.attach(browser.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+
+
+def take_screenshot(browser, name):
+    allure.attach(browser.get_screenshot_as_png(), name=name, attachment_type=AttachmentType.PNG)
 
 
 @pytest.fixture
@@ -24,7 +29,6 @@ def browser():
     b = webdriver.Chrome(ChromeDriverManager().install(), options=options)
     b.implicitly_wait(30)
     yield b
-
     b.quit()
 
 
