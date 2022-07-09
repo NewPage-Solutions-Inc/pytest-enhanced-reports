@@ -7,13 +7,14 @@ SITE_URL = 'https://opensource-demo.orangehrmlive.com/index.php/auth/login'
 USERNAME = By.ID, "txtUsername"
 PASSWORD = By.ID, "txtPassword"
 LOGIN_BTN = By.ID, "btnLogin"
-FORGOT_PWD_LINK = By.ID, "forgotPasswordLink"
+FORGOT_PWD_LINK = By.CSS_SELECTOR, "#forgotPasswordLink a"
+
 
 class LoginPage:
-            
+
     def __init__(self, driver):
         self.driver = driver
-        
+
     def navigate_to_url(self):
         self.driver.get(SITE_URL)
 

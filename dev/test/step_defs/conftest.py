@@ -10,17 +10,21 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 
-def pytest_bdd_step_error(request, feature, scenario, step, step_func, step_func_args, exception):
-    print(f'Step Name: {step}')
 
-def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
+def pytest_bdd_after_step(request, feature, scenario, step, step_func):
     print("-------This is after step method-------")
     print(f'Step Name: {step}')
-    #allure.attach(browser.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+    context = request.getfixturevalue('browser')
+    allure.attach(context.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+    print('screenshot taken')
 
 
-def take_screenshot(browser, name):
-    allure.attach(browser.get_screenshot_as_png(), name=name, attachment_type=AttachmentType.PNG)
+def pytest_bdd_step_error(request, feature, scenario, step, step_func):
+    print("-------This is error step method-------")
+    print(f'Step Name: {step}')
+    context = request.getfixturevalue('browser')
+    allure.attach(context.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+    print('screenshot taken for error')
 
 
 @pytest.fixture
