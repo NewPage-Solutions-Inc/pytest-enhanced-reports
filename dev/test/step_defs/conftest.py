@@ -14,16 +14,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 def pytest_bdd_after_step(request, feature, scenario, step, step_func):
     print("-------This is after step method-------")
     print(f'Step Name: {step}')
-    context = request.getfixturevalue('browser')
-    allure.attach(context.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+    browser = request.getfixturevalue('browser')
+    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
     print('screenshot taken')
 
 
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     print("-------This is error step method-------")
     print(f'Step Name: {step}')
-    context = request.getfixturevalue('browser')
-    allure.attach(context.get_screenshot_as_png(), name=request.function.__name__, attachment_type=AttachmentType.PNG)
+    browser = request.getfixturevalue('browser')
+    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
     print('screenshot taken for error')
 
 
