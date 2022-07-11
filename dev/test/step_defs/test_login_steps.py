@@ -18,61 +18,61 @@ LOGIN_MESSAGE = By.ID, "spanMessage"
 
 # Given Steps
 @given('the OpenHRM home page is displayed')
-def open_url(browser):
-    LoginPage(browser).navigate_to_url()
-    assert browser.find_element_by_id('txtUsername').is_displayed()
+def open_url(selenium):
+    LoginPage(selenium).navigate_to_url()
+    assert selenium.find_element_by_id('txtUsername').is_displayed()
 
 
 @when(parsers.parse('the user enters username "{username}"'))
-def enter_username(browser, logger, username):
-    LoginPage(browser).set_username(username)
+def enter_username(selenium, logger, username):
+    LoginPage(selenium).set_username(username)
     logger.info('Username set')
 
 
 @when(parsers.parse('the user enters password "{password}"'))
-def enter_password(browser, logger, password):
-    LoginPage(browser).set_password(password)
+def enter_password(selenium, logger, password):
+    LoginPage(selenium).set_password(password)
     logger.info('Password set')
 
 
 @when('the user clicks on login button')
-def click_login(browser):
+def click_login(selenium):
     with allure.step("Login Click"):
-        LoginPage(browser).click_login()
+        LoginPage(selenium).click_login()
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then('Home page is displayed')
-def home_page(browser, logger):
-    assert browser.find_element(*ADMIN_TAB).is_displayed()
+def home_page(selenium, logger):
+    assert selenium.find_element(*ADMIN_TAB).is_displayed()
     logger.info('Login Test Passed')
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then('Credentials error is displayed')
-def home_page(browser, logger):
-    actual_message = browser.find_element(*LOGIN_MESSAGE).text
+def home_page(selenium, logger):
+    actual_message = selenium.find_element(*LOGIN_MESSAGE).text
     assert actual_message == properties.INVALID_CRED_MESSAGE
     logger.info('Credentials Test Passed')
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then('Credentials error for empty field is displayed')
-def home_page(browser, logger):
-    actual_message = browser.find_element(*LOGIN_MESSAGE).text
+def home_page(selenium, logger):
+    actual_message = selenium.find_element(*LOGIN_MESSAGE).text
     assert actual_message == properties.EMPTY_CRED_MESSAGE
     logger.info('Empty Credentials Test Passed')
 
 
 @allure.severity(allure.severity_level.MINOR)
 @when('the user clicks on the forgot password link')
-def forgot_password_page(browser, logger):
-    LoginPage(browser).click_forgot_password()
+def forgot_password_page(selenium, logger):
+    LoginPage(selenium).click_forgot_password()
     logger.info('Forgot password link')
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then('the "Forgot Your Password?" text is shown on the home page')
-def forgot_password_page(browser, logger):
+def forgot_password_page(selenium, logger):
     assert "Forgot" == "forgot"
     logger.info('Forgot password link Test Passed')

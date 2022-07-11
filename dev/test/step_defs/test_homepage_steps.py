@@ -13,44 +13,44 @@ ROW_VALUE = By.XPATH, '//a[@href="saveSystemUser?userId=1"]'
 
 
 @given('The user logs in to OpenHRM')
-def user_login(browser):
-    LoginPage(browser).navigate_to_url()
-    LoginPage(browser).set_username(properties.VALID_USER)
-    LoginPage(browser).set_password(properties.VALID_PASS)
-    LoginPage(browser).click_login()
+def user_login(selenium):
+    LoginPage(selenium).navigate_to_url()
+    LoginPage(selenium).set_username(properties.VALID_USER)
+    LoginPage(selenium).set_password(properties.VALID_PASS)
+    LoginPage(selenium).click_login()
 
 
 @when(parsers.parse('The user clicks on tab "{tab}"'))
-def click_tab(browser, tab):
-    HomePage(browser).click_tab(tab)
+def click_tab(selenium, tab):
+    HomePage(selenium).click_tab(tab)
 
 
 @then(parsers.parse('The user enters "{username}" into username search'))
-def enter_username_search(browser, username):
-    HomePage(browser).enter_username(username)
+def enter_username_search(selenium, username):
+    HomePage(selenium).enter_username(username)
 
 
 @then("User clicks on search button")
-def click_search(browser):
-    HomePage(browser).click_search()
+def click_search(selenium):
+    HomePage(selenium).click_search()
 
 
 @then(parsers.parse('The value "{row_value}" is present'))
-def check_value(browser, row_value):
-    actual_value = browser.find_element(*ROW_VALUE).text
+def check_value(selenium, row_value):
+    actual_value = selenium.find_element(*ROW_VALUE).text
     assert actual_value == row_value
 
 
 @when("User clicks on profile button")
-def click_profile(browser):
-    HomePage(browser).click_profile_bar()
+def click_profile(selenium):
+    HomePage(selenium).click_profile_bar()
 
 
 @when("User clicks on logout button")
-def click_logout(browser):
-    HomePage(browser).click_logout()
+def click_logout(selenium):
+    HomePage(selenium).click_logout()
 
 
 @then('the home page is displayed')
-def login_page_display(browser):
-    assert browser.find_element_by_id('txtUsername').is_displayed()
+def login_page_display(selenium):
+    assert selenium.find_element_by_id('txtUsername').is_displayed()
