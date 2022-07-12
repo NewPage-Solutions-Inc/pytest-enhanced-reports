@@ -1,3 +1,5 @@
+from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
+
 from dev import properties
 from pytest_bdd import scenarios, given, when, then, parsers
 from dev.pages.login_page import LoginPage

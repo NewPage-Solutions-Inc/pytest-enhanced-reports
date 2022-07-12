@@ -8,24 +8,22 @@ import pytest
 from allure_commons.types import AttachmentType
 from pytest_selenium.drivers.chrome import chrome_options
 from selenium import webdriver
+from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 
+from dev.utilities.event_capture import MyListener
+
 
 def pytest_bdd_after_step(request, feature, scenario, step, step_func):
-    print("-------This is after step method-------")
-    print(f'Step Name: {step}')
     browser = request.getfixturevalue('selenium')
     allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
-    print('screenshot taken')
 
 
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
-    print("-------This is error step method-------")
-    print(f'Step Name: {step}')
     browser = request.getfixturevalue('selenium')
     allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
-    print('screenshot taken for error')
+
 
 '''
 @pytest.fixture
@@ -38,13 +36,14 @@ def browser():
     b.quit()
 '''
 
+
 @pytest.fixture
 def selenium(selenium):
-    #chrome_options.binary_location = 'dev/chromedriver'
     selenium.implicitly_wait(10)
     selenium.maximize_window()
-    yield selenium
-    selenium.quit()
+    edriver = EventFiringWebDriver(selenium, MyListener())
+    yield edriver
+    edriver.quit()
 
 
 @pytest.fixture
