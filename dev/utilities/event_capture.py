@@ -10,6 +10,8 @@ class MyListener(AbstractEventListener):
 
     def after_navigate_to(self, url, driver):
         print("After navigating to ", url)
+        allure.attach(driver.get_screenshot_as_png(), name="screenshot_after_navigating",
+                      attachment_type=AttachmentType.PNG)
 
     def before_navigate_back(self, driver):
         print("before navigating back ", driver.current_url)
@@ -30,7 +32,7 @@ class MyListener(AbstractEventListener):
         print("after_find")
 
     def before_click(self, element, driver):
-        allure.attach(driver.get_screenshot_as_png(), name="screenshot_before_click", attachment_type=AttachmentType.PNG)
+        print("before_click")
 
     def after_click(self, element, driver):
         allure.attach(driver.get_screenshot_as_png(), name="screenshot_after_click", attachment_type=AttachmentType.PNG)
@@ -39,7 +41,8 @@ class MyListener(AbstractEventListener):
         print("before_change_value_of")
 
     def after_change_value_of(self, element, driver):
-        print("after_change_value_of")
+        allure.attach(driver.get_screenshot_as_png(), name="screenshot_after_sending_keys",
+                      attachment_type=AttachmentType.PNG)
 
     def before_execute_script(self, script, driver):
         print("before_execute_script")

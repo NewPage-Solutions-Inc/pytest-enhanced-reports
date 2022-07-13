@@ -15,28 +15,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from dev.utilities.event_capture import MyListener
 
 
-def pytest_bdd_after_step(request, feature, scenario, step, step_func):
-    browser = request.getfixturevalue('selenium')
-    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
-
-
-def pytest_bdd_step_error(request, feature, scenario, step, step_func):
-    browser = request.getfixturevalue('selenium')
-    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
-
-
-'''
-@pytest.fixture
-def browser():
-    options = webdriver.ChromeOptions()
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    b = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-    b.implicitly_wait(30)
-    yield b
-    b.quit()
-'''
-
-
 @pytest.fixture
 def selenium(selenium):
     selenium.implicitly_wait(10)
@@ -60,3 +38,27 @@ def logger():
     )
     logger = logging.getLogger(__name__)
     yield logger
+
+
+# Below hooks can be used to take screenshots if needed
+'''
+def pytest_bdd_after_step(request, feature, scenario, step, step_func):
+    browser = request.getfixturevalue('selenium')
+    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
+
+
+def pytest_bdd_step_error(request, feature, scenario, step, step_func):
+    browser = request.getfixturevalue('selenium')
+    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
+'''
+#below fixture can be used for chrome using webdriver manager
+'''
+@pytest.fixture
+def browser():
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    b = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+    b.implicitly_wait(30)
+    yield b
+    b.quit()
+'''
