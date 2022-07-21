@@ -1,30 +1,78 @@
 """
 This module contains shared fixtures, steps, and hooks.
 """
-import logging
 import base64
+import logging
+from typing import Tuple
+
 import allure
 from PIL import Image
 from io import BytesIO
 import pytest
 from allure_commons.types import AttachmentType
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from dev import settings
-from dev.test.step_defs.test_strings import test_valid_size, test_get_image_details
+
+
+@pytest.fixture(scope="session")
+def resize_info(request) -> dict:
+    cmd_line_resize_info: dict = {
+        "resize_percent": request.config.getoption("report_image_resize_to_percent"),
+        "resize_width": request.config.getoption("report_image_resize_width"),
+        "resize_height": request.config.getoption("report_image_resize_height")
+    }
+
+    env_resize_info: dict = {
+        "resize_percent": settings.IMAGE_PERCENTAGE,
+        "resize_width": settings.IMAGE_WIDTH,
+        "resize_height": settings.IMAGE_HEIGHT
+    }
+
+    """
+    Order of precedence:
+    1. Specific resolution
+        1.1 - From command line options
+        1.2 - From environment variables
+    2. Resize percentage
+        1.1 - From command line option
+        1.2 - From environment variable
+    3. Default value (defined in the resize method)
+    """
+    resize_percent = None
+    resize_width = None
+    resize_height = None
+    
+    if cmd_line_resize_info['resize_width'] and cmd_line_resize_info['resize_height']:
+        resize_width = cmd_line_resize_info['resize_width']
+        resize_height = cmd_line_resize_info['resize_height']
+    elif env_resize_info['resize_width'] and env_resize_info['resize_height']:
+        resize_width = env_resize_info['resize_width']
+        resize_height = env_resize_info['resize_height']
+    else:
+        if cmd_line_resize_info['resize_percent']:
+            resize_percent = cmd_line_resize_info['resize_percent']
+        elif env_resize_info['resize_percent']:
+            resize_percent = env_resize_info['resize_percent']
+
+    return {
+        "resize_percent": resize_percent,
+        "resize_width": resize_width,
+        "resize_height": resize_height
+    }
 
 
 @pytest.fixture
-def selenium(selenium, request):
-    selenium.implicitly_wait(10)
+def selenium(selenium, resize_info):
     selenium.maximize_window()
-    edriver = EventFiringWebDriver(selenium, MyListener())
-    yield edriver
-    data = edriver.get_log('browser')
-    print('----browser console data----')
-    print(data)
-    edriver.quit()
+
+    driver = EventFiringWebDriver(selenium, MyListener(resize_info))
+
+    yield driver
+
+    driver.quit()
 
 
 @pytest.fixture
@@ -42,222 +90,67 @@ def logger():
     logger = logging.getLogger(__name__)
     yield logger
 
-@pytest.fixture
-def get_image_details(request):
-    ima = request.getfixturevalue('image_size')
-    driver = request.getfixturevalue('selenium')
-    print('The get_image_details value:')
-    p = ima / 100
-    print(p)
-    img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-    print('--get_image_details type of image_size')
-    print(type(image_size))
-    actual_size = img.size
-    print('---get_image_details size of image is')
-    print(actual_size)
-    w, h = img.size
-    print('---get_image_details Height---')
-    print(h)
-    print('---get_image_details Width---')
-    print(w)
-    print('--get_image_details after percentage_change--')
-    print('get_image_details new width')
-    nw = float(w) * p
-    print(nw)
-    print('get_image_details new height')
-    nh = float(h) * p
-    print(nh)
-    return nw, nh
-
 
 def pytest_addoption(parser):
-    parser.addoption("--imagereduction", action="store", default=0)
+    parser.addoption("--report_image_resize_to_percent", action="store", default=0)
+    parser.addoption("--report_image_resize_width", action="store", default=0)
+    parser.addoption("--report_image_resize_height", action="store", default=0)
 
 
-@pytest.fixture
-def image_size(pytestconfig):
-    yield int(pytestconfig.getoption("imagereduction"))
-
-
-# Below hooks can be used to take screenshots if needed
-def pytest_bdd_after_step(request, feature, scenario, step, step_func):
-    browser = request.getfixturevalue('selenium')
-    ima = request.getfixturevalue('image_size')
-    b = test_calculate_resolution(browser, ima)
-    allure.attach(b, name="screenshot", attachment_type=AttachmentType.PNG)
-
-'''
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
-    browser = request.getfixturevalue('selenium')
-    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
-'''
-# below fixture can be used for chrome using webdriver manager
-'''
-@pytest.fixture
-def browser():
-    options = webdriver.ChromeOptions()
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    b = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-    b.implicitly_wait(30)
-    yield b
-    b.quit()
-'''
+    driver = request.getfixturevalue('selenium')
+    resize_info = request.getfixturevalue('resize_info')
+    path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), resize_info)
+    allure.attach.file(path_to_resized_image, name="Step failed", attachment_type=AttachmentType.PNG)
 
 
 class MyListener(AbstractEventListener):
 
-    def before_navigate_to(self, url, driver):
-        print("Before navigating to ", url)
+    def __init__(self, resize_info: dict):
+        self.resize_info = resize_info
 
-    def after_navigate_to(self, url, driver):
-        print("after_navigate_to ", driver.current_url)
-        image = takes_screenshot_for_allure(driver)
-        allure.attach(image, name="Navigate", attachment_type=AttachmentType.PNG)
-
-    def before_navigate_back(self, driver):
-        print("before navigating back ", driver.current_url)
-
-    def after_navigate_back(self, driver):
-        print("After navigating back ", driver.current_url)
-
-    def before_navigate_forward(self, driver):
-        print("before navigating forward ", driver.current_url)
-
-    def after_navigate_forward(self, driver):
-        print("After navigating forward ", driver.current_url)
-
-    def before_find(self, by, value, driver):
-        print("before find")
-
-    def after_find(self, by, value, driver):
-        print("after_find")
-
-    def before_click(self, element, driver):
-        print("before_click")
+    def after_navigate_to(self, url, driver: WebDriver):
+        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+        allure.attach.file(path_to_resized_image, name="Navigation", attachment_type=AttachmentType.PNG)
 
     def after_click(self, element, driver):
-        image = takes_screenshot_for_allure(driver)
-        allure.attach(image, name="After_Click", attachment_type=AttachmentType.PNG)
-        print('--------screenshot saved in allure------')
-
-    def before_change_value_of(self, element, driver):
-        print("before_change_value_of")
+        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+        allure.attach.file(path_to_resized_image, name="Click", attachment_type=AttachmentType.PNG)
 
     def after_change_value_of(self, element, driver):
-        image = takes_screenshot_for_allure(driver)
-        allure.attach(image, name="After_Sending_Keys", attachment_type=AttachmentType.PNG)
-
-    def before_execute_script(self, script, driver):
-        print("before_execute_script")
-
-    def after_execute_script(self, script, driver):
-        print("after_execute_script")
-
-    def before_close(self, driver):
-        print("before_close")
-
-    def after_close(self, driver):
-        print("after_close")
-
-    def before_quit(self, driver):
-        print("before_quit")
-
-    def after_quit(self, driver):
-        print("after_quit")
-
-    def on_exception(self, exception, driver):
-        print("on_exception")
+        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+        allure.attach.file(path_to_resized_image, name="Keyboard input", attachment_type=AttachmentType.PNG)
 
 
-def takes_screenshot_for_allure(driver):
-    if image_size == 0:
-        print('in the default value section')
-        # open the image in memory
-        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-        img.thumbnail((int(settings.IMAGE_HEIGHT), int(settings.IMAGE_WIDTH)))
-        img.save("reports/screenshot.png")
-        with open("reports/screenshot.png", 'rb') as image:
-            file = image.read()
-            byte_array = bytearray(file)
-        return byte_array
-    else:
-        print('The user sent input value:')
-        p = image_size() / 100
-        print(p)
-        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-        print('--type of image_size')
-        print(type(image_size))
-        actual_size = img.size
-        print('---size of image is')
-        print(actual_size)
-        w, h = img.size
-        print('---Height---')
-        print(h)
-        print('---Width---')
-        print(w)
-        print('--after percentage_change--')
-        print('new width')
-        nw = float(w) * p
-        print(nw)
-        print('new height')
-        nh = float(h) * p
-        print(nh)
-        img.thumbnail((int(nw), int(nh)))
-        img.save("reports/screenshot.png")
-        with open("reports/screenshot.png", 'rb') as image:
-            file = image.read()
-            byte_array = bytearray(file)
-        return byte_array
+def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
+    new_width = int(width * resize_factor)
+    new_height = int(height * resize_factor)
+    return new_width, new_height
 
 
-def test_calculate_resolution(driver, ima):
-    print('The user sent input value:')
-    p = ima / 100
-    print(p)
-    img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-    print('--type of image_size')
-    print(type(image_size))
-    actual_size = img.size
-    print('---size of image is')
-    print(actual_size)
-    w, h = img.size
-    print('---Height---')
-    print(h)
-    print('---Width---')
-    print(w)
-    print('--after percentage_change--')
-    print('new width')
-    nw = float(w) * p
-    print(nw)
-    print('new height')
-    nh = float(h) * p
-    print(nh)
-    img.thumbnail((int(nw), int(nh)))
-    img.save("reports/screenshot.png")
-    with open("reports/screenshot.png", 'rb') as image:
-        file = image.read()
-        byte_array = bytearray(file)
-    return byte_array
+def _get_resized_image(image_bytes, resize_info):
+    desired_resolution = None
+    # default resize factor if no values are passed from cmd line args or env vars
+    resize_factor: float = 0.3
+    if resize_info:
+        if resize_info['resize_width'] and resize_info['resize_height']:
+            # if a resolution is provided, use that
+            desired_resolution = (resize_info['resize_width'], resize_info['resize_height'])
+        elif resize_info['resize_percent']:
+            # if a percentage is provided instead, some calculations are required
+            resize_factor = int(resize_info['resize_percent']) / 100
 
+    # open the image directly thru an in-memory buffer
+    img = Image.open(BytesIO(base64.b64decode(image_bytes)))
 
-def takes_screenshot_for_allure_new(driver):
-    if image_size == 0:
-        print('in the default value section')
-        # open the image in memory
-        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-        img.thumbnail((int(settings.IMAGE_HEIGHT), int(settings.IMAGE_WIDTH)))
-        img.save("reports/screenshot.png")
-        with open("reports/screenshot.png", 'rb') as image:
-            file = image.read()
-            byte_array = bytearray(file)
-        return byte_array
-    else:
-        print('The user sent input value:')
-        a, b = test_get_image_details
-        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
-        img.thumbnail((int(a), int(b)))
-        img.save("reports/screenshot.png")
-        with open("reports/screenshot.png", 'rb') as image:
-            file = image.read()
-            byte_array = bytearray(file)
-        return byte_array
+    # if the user has not passed a specific resolution, create it from the resize factor
+    if not desired_resolution:
+        desired_resolution = __get_resized_resolution(img.width, img.height, resize_factor)
+
+    # resize image to the desired resolution. if more customizability is needed, consider the resize or reduce methods
+    img.thumbnail(desired_resolution)
+    # in tobytes() need to return the array before the join operation happens
+    # return img.tobytes()
+    path: str = "reports/screenshot.png"
+    img.save(path)
+    return path
