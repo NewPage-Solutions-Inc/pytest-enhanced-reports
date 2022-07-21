@@ -1,10 +1,8 @@
 """
 This module contains shared fixtures, steps, and hooks.
 """
-import base64
 import logging
 import base64
-
 import allure
 from PIL import Image
 from io import BytesIO
@@ -14,11 +12,11 @@ from selenium.webdriver.support.abstract_event_listener import AbstractEventList
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from dev import settings
-from dev.test.step_defs.test_strings import test_valid_size
+from dev.test.step_defs.test_strings import test_valid_size, test_get_image_details
 
 
 @pytest.fixture
-def selenium(selenium):
+def selenium(selenium, request):
     selenium.implicitly_wait(10)
     selenium.maximize_window()
     edriver = EventFiringWebDriver(selenium, MyListener())
@@ -44,6 +42,33 @@ def logger():
     logger = logging.getLogger(__name__)
     yield logger
 
+@pytest.fixture
+def get_image_details(request):
+    ima = request.getfixturevalue('image_size')
+    driver = request.getfixturevalue('selenium')
+    print('The get_image_details value:')
+    p = ima / 100
+    print(p)
+    img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
+    print('--get_image_details type of image_size')
+    print(type(image_size))
+    actual_size = img.size
+    print('---get_image_details size of image is')
+    print(actual_size)
+    w, h = img.size
+    print('---get_image_details Height---')
+    print(h)
+    print('---get_image_details Width---')
+    print(w)
+    print('--get_image_details after percentage_change--')
+    print('get_image_details new width')
+    nw = float(w) * p
+    print(nw)
+    print('get_image_details new height')
+    nh = float(h) * p
+    print(nh)
+    return nw, nh
+
 
 def pytest_addoption(parser):
     parser.addoption("--imagereduction", action="store", default=0)
@@ -55,12 +80,13 @@ def image_size(pytestconfig):
 
 
 # Below hooks can be used to take screenshots if needed
-'''
 def pytest_bdd_after_step(request, feature, scenario, step, step_func):
     browser = request.getfixturevalue('selenium')
-    allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
+    ima = request.getfixturevalue('image_size')
+    b = test_calculate_resolution(browser, ima)
+    allure.attach(b, name="screenshot", attachment_type=AttachmentType.PNG)
 
-
+'''
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     browser = request.getfixturevalue('selenium')
     allure.attach(browser.get_screenshot_as_png(), name="screenshot", attachment_type=AttachmentType.PNG)
@@ -145,6 +171,7 @@ class MyListener(AbstractEventListener):
 
 def takes_screenshot_for_allure(driver):
     if image_size == 0:
+        print('in the default value section')
         # open the image in memory
         img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
         img.thumbnail((int(settings.IMAGE_HEIGHT), int(settings.IMAGE_WIDTH)))
@@ -153,13 +180,10 @@ def takes_screenshot_for_allure(driver):
             file = image.read()
             byte_array = bytearray(file)
         return byte_array
-
-    elif image_size == 100:
-        # open the image in memory
-        return driver.get_screenshot_as_png()
-
     else:
-        # open the image in memory
+        print('The user sent input value:')
+        p = image_size() / 100
+        print(p)
         img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
         print('--type of image_size')
         print(type(image_size))
@@ -171,13 +195,67 @@ def takes_screenshot_for_allure(driver):
         print(h)
         print('---Width---')
         print(w)
-        percentage_change = test_valid_size
-        print('--percentage_change--')
-        print(percentage_change)
+        print('--after percentage_change--')
         print('new width')
-        print(w*percentage_change)
+        nw = float(w) * p
+        print(nw)
         print('new height')
+        nh = float(h) * p
+        print(nh)
+        img.thumbnail((int(nw), int(nh)))
+        img.save("reports/screenshot.png")
+        with open("reports/screenshot.png", 'rb') as image:
+            file = image.read()
+            byte_array = bytearray(file)
+        return byte_array
+
+
+def test_calculate_resolution(driver, ima):
+    print('The user sent input value:')
+    p = ima / 100
+    print(p)
+    img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
+    print('--type of image_size')
+    print(type(image_size))
+    actual_size = img.size
+    print('---size of image is')
+    print(actual_size)
+    w, h = img.size
+    print('---Height---')
+    print(h)
+    print('---Width---')
+    print(w)
+    print('--after percentage_change--')
+    print('new width')
+    nw = float(w) * p
+    print(nw)
+    print('new height')
+    nh = float(h) * p
+    print(nh)
+    img.thumbnail((int(nw), int(nh)))
+    img.save("reports/screenshot.png")
+    with open("reports/screenshot.png", 'rb') as image:
+        file = image.read()
+        byte_array = bytearray(file)
+    return byte_array
+
+
+def takes_screenshot_for_allure_new(driver):
+    if image_size == 0:
+        print('in the default value section')
+        # open the image in memory
+        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
         img.thumbnail((int(settings.IMAGE_HEIGHT), int(settings.IMAGE_WIDTH)))
+        img.save("reports/screenshot.png")
+        with open("reports/screenshot.png", 'rb') as image:
+            file = image.read()
+            byte_array = bytearray(file)
+        return byte_array
+    else:
+        print('The user sent input value:')
+        a, b = test_get_image_details
+        img = Image.open(BytesIO(base64.b64decode(driver.get_screenshot_as_base64())))
+        img.thumbnail((int(a), int(b)))
         img.save("reports/screenshot.png")
         with open("reports/screenshot.png", 'rb') as image:
             file = image.read()

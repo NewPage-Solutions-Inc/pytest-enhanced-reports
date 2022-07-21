@@ -2,7 +2,7 @@ Feature: OpenHRM Home Page
 
   @admin_search
  Scenario: Basic Admin Search
-#    Given The user logs in to OpenHRM
+   Given The user logs in to OpenHRM
 #   Then The user enters "Admin" into username search
 #    And User clicks on search button
 #    Then The value "Admin" is present

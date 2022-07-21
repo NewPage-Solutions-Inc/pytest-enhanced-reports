@@ -1,14 +1,14 @@
 Feature: OpenHRM Login
 
-Background:
-  Given the OpenHRM home page is displayed
+#Background:
+#  Given the OpenHRM home page is displayed
 
-  @login_correct_credentials
+#  @login_correct_credentials
   Scenario: Basic OpenHRM Login
-    When the user enters username "Admin"
-    And the user enters password "admin123"
-    And the user clicks on login button
-    Then Home page is displayed
+#    When the user enters username "Admin"
+#    And the user enters password "admin123"
+#    And the user clicks on login button
+#    Then Home page is displayed
 
 #  @login_empty_credentials
 #  Scenario: OpenHRM Login with empy username and password
