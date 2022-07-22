@@ -135,7 +135,7 @@ def _get_resized_image(image_bytes, resize_info):
     if resize_info:
         if resize_info['resize_width'] and resize_info['resize_height']:
             # if a resolution is provided, use that
-            desired_resolution = (resize_info['resize_width'], resize_info['resize_height'])
+            desired_resolution = (int(resize_info['resize_width']), int(resize_info['resize_height']))
         elif resize_info['resize_percent']:
             # if a percentage is provided instead, some calculations are required
             resize_factor = int(resize_info['resize_percent']) / 100
