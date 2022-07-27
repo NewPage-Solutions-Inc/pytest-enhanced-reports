@@ -6,6 +6,7 @@ Download the Selenium Chrome from https://chromedriver.chromium.org/downloads. M
 Once you place the chrome file then use below commands to complete the setup.
 
 Install the Plugin:
+(Install the wheel dependencies mentioned in requirement.txt file first)
 1. Create a wheel file from source by running command ``python3 setup.py bdist_wheel`` inside `/screenshot_plugin` directory
 2. This command will create a wheel file in `/screenshot_plugin/dist` folder
 3. Install this package by running `pip install <path_to_wheel_file>`
