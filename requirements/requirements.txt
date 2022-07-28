@@ -5,3 +5,5 @@ pytest-selenium == 2.0.1
 pytest-selenium-enhancer == 1.7.1
 allure-pytest-bdd == 2.9.45
 allure-python-commons == 2.9.45
+wheel
+check-wheel-contents
