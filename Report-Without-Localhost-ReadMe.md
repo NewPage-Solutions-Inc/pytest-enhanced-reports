@@ -1,0 +1,40 @@
+# View Allure Report Without web Server
+
+### Problem:
+When allure report is generated using `allure generate source_folder` command, a complete html view with supporting json, css, and js files is created. When `index.html` page is opened, without starting a server, it displays empty report.
+Reason for this is browsers blocking the access to files present on the local file system.
+
+### Solution:
+Solution is to disable the browser configurations that are blocking the access to local file system.
+Let's look at changing the configurations for different browsers.
+
+##### Firefox
+1. Open Firefox
+2. In address bar, Enter `about:config`
+3. Search for `security.fileuri.strict_origin_policy`
+4. Double click this setting and make sure that it is marked `false`.
+5. Quit the browser.
+6. Now open the `index.html` file using Firefox.
+7. This is one time setting, user will have to do it for the first time only.
+
+##### Safari
+1. Open Safari
+2. Navigate to Preferences
+3. Click on Advanced Tab
+4. Check the checkbox `Show Develop menu in menu bar` at the bottom of the tab.
+5. You'll see Develop menu item in main menu of Safari in menu bar.
+6. Click on Develop and then Select `Disable Local File Restrictions`.
+7. Quit Safari.
+8. Now open the `index.html` file using Firefox.
+9. This is one time setting, user will have to do it for the first time only.
+
+##### Chrome
+1. Google Chrome doesn't persist the file system settings hence user has to run the chrome with required parameters everytime.
+2. To Help in starting the chrome with file permissions, I have bundled basic shell commands.
+3. Run the script named `view_report_on_chrome.sh` present at the root directory of this repo.
+4. Make sure that you place this script in the allure report source directory (created with allure generate command) in the same folder where `index.html` file is present.
+5. This Script will close any chrome instances that are running, it will prompt user to save any work before it proceeds to close the browser instance.
+6. Then it will run command `open -a Google\ Chrome --args --disable-web-security --allow-file-access-from-files "$(pwd)/index.html";`
+7. This command will open Chrome with file access and disabled web security.
+8. This command will automatically open the `index.html` given that script file is placed in same directory as `index.html`
+9. As mentioned above, google does not allow persisting these settings, hence user will have to view the report by using this script.
