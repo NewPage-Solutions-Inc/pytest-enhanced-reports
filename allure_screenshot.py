@@ -135,4 +135,3 @@ def _get_resized_image(image_bytes, resize_info):
     path: str = "screenshot.png"
     img.save(path)
     return path
-
