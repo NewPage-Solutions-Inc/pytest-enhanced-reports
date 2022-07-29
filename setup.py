@@ -5,10 +5,10 @@ setup(
     name='allure-screenshot',
     version='0.1.0',
     description='A pytest plugin to take screenshots for allure report',
-    author='Waleed',
-    author_email='muhammad.waleed@newpage.io',
+    author='SDET',
+    author_email='qa@newpage.io',
     license='proprietary',
-    py_modules=['allure_screenshot',"settings"],
+    py_modules=['allure_screenshot', "settings"],
     install_requires=[
         "selenium",
         "pytest",
