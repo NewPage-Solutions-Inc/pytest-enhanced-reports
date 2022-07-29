@@ -7,3 +7,4 @@ allure-pytest-bdd == 2.9.45
 allure-python-commons == 2.9.45
 wheel
 check-wheel-contents
+allure-combine
