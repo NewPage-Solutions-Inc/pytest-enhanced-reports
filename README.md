@@ -17,13 +17,13 @@ or if you want to use ssh:
 pip install git+ssh://git@github.com/mrshahzadakram/allurescreenshotplugin.git
 
 Once plugin is installed then you may pass level of screenshots to be taken for allure reporting, e.g.
-- if you pass argument "screenshot_option" with value "all", then screenshot will be taken for each step in scenario
+- if you pass argument "screenshot_option" with value "all", then screenshot will be taken for each step in scenario: 
  pytest -v -s -q dev/test/step_defs/ --report_screenshot_option all --report_image_resize_width 1720 --report_image_resize_height 1080  --alluredir=reports --driver Chrome --driver-path dev/chromedriver
 
-- if you pass argument "screenshot_option" with value "fail", then screenshot will be taken for only failed steps in scenario
+- if you pass argument "screenshot_option" with value "fail", then screenshot will be taken for only failed steps in scenario: 
  pytest -v -s -q dev/test/step_defs/ --report_screenshot_option fail --report_image_resize_width 1720 --report_image_resize_height 1080  --alluredir=reports --driver Chrome --driver-path dev/chromedriver
 
-- you pass argument "screenshot_option" with value "none", then no screenshot will be shown to the allure report
+- you pass argument "screenshot_option" with value "none", then no screenshot will be shown to the allure report: 
  pytest -v -s -q dev/test/step_defs/ --report_screenshot_option none --report_image_resize_width 1720 --report_image_resize_height 1080  --alluredir=reports --driver Chrome --driver-path dev/chromedriver
 
 - If you want to send image width and image height for the screenshot size in allure report then you can use "report_image_resize_width" and "report_image_resize_height" arguments with your desired values, and below command can be used as an example:
