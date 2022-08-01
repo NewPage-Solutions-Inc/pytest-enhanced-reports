@@ -4,7 +4,6 @@ This module contains shared fixtures, steps, and hooks.
 import base64
 import logging
 from typing import Tuple
-
 import allure
 from PIL import Image
 from io import BytesIO
@@ -12,6 +11,7 @@ import pytest
 from allure_commons.types import AttachmentType
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
+from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 import settings
 
 
@@ -20,13 +20,15 @@ def resize_info(request) -> dict:
     cmd_line_resize_info: dict = {
         "resize_percent": request.config.getoption("report_image_resize_to_percent"),
         "resize_width": request.config.getoption("report_image_resize_width"),
-        "resize_height": request.config.getoption("report_image_resize_height")
+        "resize_height": request.config.getoption("report_image_resize_height"),
+        "screenshot_option": request.config.getoption("report_screenshot_option")
     }
 
     env_resize_info: dict = {
         "resize_percent": settings.IMAGE_PERCENTAGE,
         "resize_width": settings.IMAGE_WIDTH,
-        "resize_height": settings.IMAGE_HEIGHT
+        "resize_height": settings.IMAGE_HEIGHT,
+        "screenshot_option": settings.SCREENSHOT_OPTION
     }
 
     """
@@ -42,7 +44,10 @@ def resize_info(request) -> dict:
     resize_percent = None
     resize_width = None
     resize_height = None
+    screenshot_option = None
 
+    if cmd_line_resize_info['screenshot_option']:
+        screenshot_option = cmd_line_resize_info['screenshot_option']
     if cmd_line_resize_info['resize_width'] and cmd_line_resize_info['resize_height']:
         resize_width = cmd_line_resize_info['resize_width']
         resize_height = cmd_line_resize_info['resize_height']
@@ -58,7 +63,8 @@ def resize_info(request) -> dict:
     return {
         "resize_percent": resize_percent,
         "resize_width": resize_width,
-        "resize_height": resize_height
+        "resize_height": resize_height,
+        "screenshot_option": screenshot_option
     }
 
 
@@ -76,31 +82,43 @@ def pytest_addoption(parser):
     parser.addoption("--report_image_resize_to_percent", action="store", default=0)
     parser.addoption("--report_image_resize_width", action="store", default=0)
     parser.addoption("--report_image_resize_height", action="store", default=0)
+    parser.addoption("--report_screenshot_option", action="store", default="all")
+
+
+def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
+    driver = request.getfixturevalue('selenium')
+    level_value = request.getfixturevalue('resize_info')
+    if level_value['screenshot_option'] == 'fail' or level_value['screenshot_option'] == 'all':
+        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), level_value)
+        allure.attach.file(path_to_resized_image, name="Step failed", attachment_type=AttachmentType.PNG)
 
 
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     driver = request.getfixturevalue('selenium')
-    resize_info = request.getfixturevalue('resize_info')
-    path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), resize_info)
-    allure.attach.file(path_to_resized_image, name="Step failed", attachment_type=AttachmentType.PNG)
+    level_value = request.getfixturevalue('resize_info')
+    if level_value['screenshot_option'] == 'fail' or level_value['screenshot_option'] == 'all':
+        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), level_value)
+        allure.attach.file(path_to_resized_image, name="Step failed", attachment_type=AttachmentType.PNG)
 
 
 class WebDriverEventListener(AbstractEventListener):
-
     def __init__(self, resize_info: dict):
         self.resize_info = resize_info
 
     def after_navigate_to(self, url, driver: WebDriver):
-        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
-        allure.attach.file(path_to_resized_image, name="Navigation", attachment_type=AttachmentType.PNG)
+        if self.resize_info['screenshot_option'] == 'all':
+            path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+            allure.attach.file(path_to_resized_image, name="Navigation", attachment_type=AttachmentType.PNG)
 
     def after_click(self, element, driver):
-        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
-        allure.attach.file(path_to_resized_image, name="Click", attachment_type=AttachmentType.PNG)
+        if self.resize_info['screenshot_option'] == 'all':
+            path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+            allure.attach.file(path_to_resized_image, name="Click", attachment_type=AttachmentType.PNG)
 
     def after_change_value_of(self, element, driver):
-        path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
-        allure.attach.file(path_to_resized_image, name="Keyboard input", attachment_type=AttachmentType.PNG)
+        if self.resize_info['screenshot_option'] == 'all':
+            path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), self.resize_info)
+            allure.attach.file(path_to_resized_image, name="Keyboard input", attachment_type=AttachmentType.PNG)
 
 
 def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
