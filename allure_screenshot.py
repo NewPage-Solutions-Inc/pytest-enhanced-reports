@@ -1,3 +1,4 @@
+
 """
 This module contains shared fixtures, steps, and hooks.
 """
@@ -11,8 +12,24 @@ import pytest
 from allure_commons.types import AttachmentType
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
-from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 import settings
+from selenium.webdriver.common.action_chains import ActionChains
+import wrapt
+import wrapt.wrappers
+
+@wrapt.patch_function_wrapper(ActionChains, 'perform')
+def perform(wrapped, instance, args, kwargs):
+    # here, wrapped is the original perform,
+    # instance is `self` instance (it is not true for classmethods though),
+    # args and kwargs are tuple and dict respectively.
+    if pytest.image_info['screenshot_option'] == 'all':
+        path_to_resized_image = _get_resized_image(instance._driver.get_screenshot_as_base64(), pytest.image_info)
+        allure.attach.file(path_to_resized_image, name="Before ActionChain Perform", attachment_type=AttachmentType.PNG)
+        wrapped(*args, **kwargs)  # note it is already bound to the instance
+        path_to_resized_image = _get_resized_image(instance._driver.get_screenshot_as_base64(), pytest.image_info)
+        allure.attach.file(path_to_resized_image, name="Before ActionChain Perform", attachment_type=AttachmentType.PNG)
+    else:
+        wrapped(*args, **kwargs)
 
 
 @pytest.fixture(scope="session")
@@ -45,7 +62,6 @@ def resize_info(request) -> dict:
     resize_width = None
     resize_height = None
     screenshot_option = None
-
     if cmd_line_resize_info['screenshot_option']:
         screenshot_option = cmd_line_resize_info['screenshot_option']
     if cmd_line_resize_info['resize_width'] and cmd_line_resize_info['resize_height']:
@@ -59,7 +75,12 @@ def resize_info(request) -> dict:
             resize_percent = cmd_line_resize_info['resize_percent']
         elif env_resize_info['resize_percent']:
             resize_percent = env_resize_info['resize_percent']
-
+    pytest.image_info = {
+        "resize_percent": resize_percent,
+        "resize_width": resize_width,
+        "resize_height": resize_height,
+        "screenshot_option": screenshot_option
+    }
     return {
         "resize_percent": resize_percent,
         "resize_width": resize_width,
@@ -92,7 +113,6 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
         path_to_resized_image = _get_resized_image(driver.get_screenshot_as_base64(), level_value)
         allure.attach.file(path_to_resized_image, name="Step failed", attachment_type=AttachmentType.PNG)
 
-
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     driver = request.getfixturevalue('selenium')
     level_value = request.getfixturevalue('resize_info')
@@ -102,6 +122,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
 
 
 class WebDriverEventListener(AbstractEventListener):
+
     def __init__(self, resize_info: dict):
         self.resize_info = resize_info
 
@@ -127,17 +148,17 @@ def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
     return new_width, new_height
 
 
-def _get_resized_image(image_bytes, resize_info):
+def _get_resized_image(image_bytes, info):
     desired_resolution = None
     # default resize factor if no values are passed from cmd line args or env vars
     resize_factor: float = 0.3
-    if resize_info:
-        if resize_info['resize_width'] and resize_info['resize_height']:
+    if info:
+        if info['resize_width'] and info['resize_height']:
             # if a resolution is provided, use that
-            desired_resolution = (int(resize_info['resize_width']), int(resize_info['resize_height']))
-        elif resize_info['resize_percent']:
+            desired_resolution = (int(info['resize_width']), int(info['resize_height']))
+        elif info['resize_percent']:
             # if a percentage is provided instead, some calculations are required
-            resize_factor = int(resize_info['resize_percent']) / 100
+            resize_factor = int(info['resize_percent']) / 100
 
     # open the image directly thru an in-memory buffer
     img = Image.open(BytesIO(base64.b64decode(image_bytes)))
@@ -153,3 +174,4 @@ def _get_resized_image(image_bytes, resize_info):
     path: str = "screenshot.png"
     img.save(path)
     return path
+
