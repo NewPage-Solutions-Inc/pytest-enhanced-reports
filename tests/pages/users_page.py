@@ -7,7 +7,6 @@ USERS_MENU = By.ID, 'menu_admin_viewSystemUsers'
 SEARCH_FIELD = By.ID, 'searchSystemUser_userName'
 
 
-
 class UserPage:
 
     def __init__(self, driver):

@@ -1,10 +1,8 @@
-from dev import properties
+from tests import properties
 from pytest_bdd import scenarios, given, when, then, parsers
-from dev.pages.login_page import LoginPage
-from dev.pages.home_page import HomePage
+from tests.pages.login_page import LoginPage
+from tests.pages.home_page import HomePage
 from selenium.webdriver.common.by import By
-
-# Scenarios
 
 scenarios('../features/homepage.feature')
 
