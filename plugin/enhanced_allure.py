@@ -1,9 +1,11 @@
 import logging
 import os
 import dotenv
+import threading
 
 from typing import Tuple
 
+import pytest
 from pytest import fixture
 
 import allure
@@ -20,8 +22,10 @@ from selenium.webdriver.common.action_chains import ActionChains
 import wrapt
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 
-dotenv.load_dotenv()
 
+import cv2
+
+dotenv.load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +57,18 @@ def create_wrappers(report_screenshot_options):
         _take_screenshot("After performing selenium action chain", report_screenshot_options, instance._driver)
 
 
+@pytest.fixture
+def screen_recorder():
+    obj = ScreenRecorder()
+    yield obj
+
+
+@pytest.fixture
+def video_capture_thread(screen_recorder, selenium):
+    recorder_thread = threading.Thread(target=screen_recorder.start_capturing, name='Recorder', args=[selenium])
+    yield recorder_thread, screen_recorder
+
+
 class WebDriverEventListener(AbstractEventListener):
 
     def __init__(self, plugin_options: dict):
@@ -69,6 +85,50 @@ class WebDriverEventListener(AbstractEventListener):
 
     def after_execute_script(self, script, driver):
         _take_screenshot("JS execution", self.plugin_options, driver)
+
+
+class ScreenRecorder:
+
+    def __init__(self):
+        self.video = None
+        self.stop = False
+        self.directory = "video/"
+
+    def start_capturing(self, driver_):
+        """This method will start caotyring images and saving them on disk under /video folder
+            These images will later be used to stich together into a video"""
+        try:
+            count = 0
+            while True:
+                if not os.path.isdir(self.directory):
+                    os.mkdir(self.directory)
+                    logging.info("Creating new directory: " + self.directory)
+                driver_.save_screenshot(self.directory+str(count)+".png")
+                count += 1
+                if self.stop:
+                    logging.info("Stopping Screen Capture")
+                    break
+            logger.info("SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count))
+        except Exception as error:
+            logger.error("An Exception occurred while taking screenshot. " + str(error))
+
+    def create_video_from_images(self, video_size: tuple, frame_rate: int):
+        """This method will sticth the images under /video directory into a video"""
+        try:
+            fourcc = cv2.VideoWriter_fourcc(*'vp09')
+            video = cv2.VideoWriter("video.webm", fourcc, int(frame_rate), video_size)
+            images_path = os.listdir(self.directory)
+            images_path = sorted(images_path, key=lambda x: int(os.path.splitext(x)[0]))
+            for img in images_path:
+                if img.__contains__('png'):
+                    video.write(cv2.resize(cv2.imread(self.directory + img), video_size))
+            video.release()
+            logger.info("TEST EXECUTION VIDEO RECORDING VIDEO STOPPED [Video Size: " + str(video_size) + " - Frame Rate: " + str(frame_rate) + "]")
+        except Exception as error:
+            logger.error("An Exception occurred while stitching video. " + str(error))
+        finally:
+            # Now clean the images directory
+            _clean_image_repository(self.directory)
 
 
 def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
@@ -105,6 +165,41 @@ def pytest_addoption(parser):
 
     # valid values for screenshot level are 'none', 'all', 'error-only'
     parser.addoption("--report_screenshot_level", action="store", default=None)
+
+    # valid values for video recording are 'true', 'false'
+    parser.addoption("--report_video_recording", action="store", default=0)
+
+    # expected width of video frame to be recorded
+    parser.addoption("--report_video_width", action="store", default=0)
+
+    # expected height of video frame to be recorded
+    parser.addoption("--report_video_height", action="store", default=0)
+
+    # expected number of frames per second while recording video.
+    # this is applicable when there are enough frames present to be recorded in one second
+    parser.addoption("--report_video_frame_rate", action="store", default=0)
+
+    # a percentage by which the video frames will be resized. valid values - 75, 60, 50, etc
+    parser.addoption("--report_video_resize_percentage", action="store", default=0)
+
+
+def pytest_bdd_before_scenario(request, feature, scenario):
+    video_recording = request.getfixturevalue('report_video_recording_options')['video_recording']
+    if video_recording:
+        obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
+        obj_recorder_thread.start()
+    logging.info("TEST EXECUTION VIDEO RECORDING: " + str(video_recording))
+
+
+def pytest_bdd_after_scenario(request, feature, scenario):
+    video_info = request.getfixturevalue('report_video_recording_options')
+    if video_info['video_recording']:
+        obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
+        obj_recorder.stop = True
+        obj_recorder_thread.join()
+        video_resize_info = _get_video_resize_resolution(video_info)
+        obj_recorder.create_video_from_images(video_resize_info, video_info['video_frame_rate'])
+        allure.attach.file("video.webm", name=scenario.name, attachment_type=AttachmentType.WEBM)
 
 
 @fixture(scope="session")
@@ -164,6 +259,61 @@ def report_screenshot_options(request) -> dict:
     }
 
 
+@fixture(scope="session")
+def report_video_recording_options(request) -> dict:
+    cmd_line_plugin_options: dict = {
+        "video_recording": request.config.getoption("report_video_recording"),
+        "video_width": request.config.getoption("report_video_width"),
+        "video_height": request.config.getoption("report_video_height"),
+        "video_frame_rate": request.config.getoption("report_video_frame_rate"),
+        "video_resize_percentage": request.config.getoption("report_video_resize_percentage")
+    }
+
+    env_plugin_options: dict = {
+        "video_recording": _get_env_var("VIDEO_RECORDING", default_value=False),
+        "video_width": _get_env_var("VIDEO_WIDTH"),
+        "video_height": _get_env_var("VIDEO_HEIGHT"),
+        "video_frame_rate": _get_env_var("VIDEO_FRAME_RATE", default_value=5),
+        "video_resize_percentage": _get_env_var("VIDEO_RESIZE_PERCENTAGE", default_value=30)
+    }
+
+    video_recording = None
+    video_height = None
+    video_width = None
+    video_frame_rate = None
+    video_resize_percentage = None
+
+    if cmd_line_plugin_options['video_recording']:
+        video_recording = str(cmd_line_plugin_options['video_recording']).lower() == 'true'
+    elif env_plugin_options['video_recording']:
+        video_recording = str(env_plugin_options['video_recording']).lower() == 'true'
+
+    if cmd_line_plugin_options['video_frame_rate']:
+        video_frame_rate = cmd_line_plugin_options['video_frame_rate']
+    elif env_plugin_options['video_frame_rate']:
+        video_frame_rate = env_plugin_options['video_frame_rate']
+
+    if cmd_line_plugin_options['video_width'] and cmd_line_plugin_options['video_height']:
+        video_width = cmd_line_plugin_options['video_width']
+        video_height = cmd_line_plugin_options['video_height']
+    elif env_plugin_options['video_width'] and env_plugin_options['video_height']:
+        video_width = env_plugin_options['video_width']
+        video_height = env_plugin_options['video_height']
+    else:
+        if cmd_line_plugin_options['video_resize_percentage']:
+            video_resize_percentage = cmd_line_plugin_options['video_resize_percentage']
+        elif env_plugin_options['video_resize_percentage']:
+            video_resize_percentage = env_plugin_options['video_resize_percentage']
+
+    return {
+        "video_recording": video_recording,
+        "video_height": video_height,
+        "video_width": video_width,
+        "video_frame_rate": video_frame_rate,
+        "video_resize_percentage": video_resize_percentage
+    }
+
+
 def fail_silently(func):
     """Makes sure that any errors/exceptions do not get outside the plugin"""
     def wrapped_func(*args, **kws):
@@ -208,7 +358,7 @@ def _get_resized_image(image_bytes, options: dict):
     img.thumbnail(desired_resolution)
     # in tobytes() need to return the array before the join operation happens
     # return img.tobytes()
-    path: str = "screenshot.png"
+    path: str = "../screenshot.png"
     img.save(path)
     return path
 
@@ -217,3 +367,27 @@ def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
     new_width = int(width * resize_factor)
     new_height = int(height * resize_factor)
     return new_width, new_height
+
+
+def _get_video_resize_resolution(info):
+    desired_resolution = None
+    obj_screen_recorder = ScreenRecorder()
+    if info:
+        if info['video_width'] and info['video_height']:
+            # if a resolution is provided, use that
+            desired_resolution = (int(info['video_width']), int(info['video_height']))
+        elif info['video_resize_percentage']:
+            # if a percentage is provided, set the resize factor from default to user provided value
+            resize_factor = int(info['video_resize_percentage']) / 100
+            img = Image.open(os.path.join(obj_screen_recorder.directory, os.listdir(obj_screen_recorder.directory)[0]))
+            desired_resolution = __get_resized_resolution(img.width, img.height, resize_factor)
+
+    return desired_resolution
+
+
+def _clean_image_repository(img_dir):
+    # Now clean the images directory
+    for f in os.listdir(img_dir):
+        os.remove(os.path.join(img_dir, f))
+    os.rmdir(img_dir)
+    lo
