@@ -390,4 +390,4 @@ def _clean_image_repository(img_dir):
     for f in os.listdir(img_dir):
         os.remove(os.path.join(img_dir, f))
     os.rmdir(img_dir)
-    lo
+    logger.info(f"IMAGE REPOSOTORY CLEANED. {img_dir} FOLDER DELETED.")
