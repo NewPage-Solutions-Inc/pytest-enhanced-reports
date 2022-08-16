@@ -22,7 +22,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 import wrapt
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 
-
 import cv2
 
 dotenv.load_dotenv()
@@ -37,6 +36,8 @@ def screenshotting_driver(report_screenshot_options):
         if report_screenshot_options['screenshot_level'] != 'all':
             return driver
 
+        # check if the directory to write screenshots exists
+        _mkdir(report_screenshot_options["screenshot_dir"])
         return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options))
     return _enhanced_driver_getter
 
@@ -58,8 +59,10 @@ def create_wrappers(report_screenshot_options):
 
 
 @pytest.fixture
-def screen_recorder():
+def screen_recorder(report_video_recording_options):
     obj = ScreenRecorder()
+    obj.video_store = report_video_recording_options["video_dir"]
+    _mkdir(obj.video_store)
     yield obj
 
 
@@ -90,20 +93,20 @@ class WebDriverEventListener(AbstractEventListener):
 class ScreenRecorder:
 
     def __init__(self):
-        self.video = None
         self.stop = False
-        self.directory = "video/"
+        self.directory = "temp/"  # This directory will be used to save the frames temporarily
+        self.video_store = "videos"  # This will be used to save the recorded video
 
     def start_capturing(self, driver_):
         """This method will start caotyring images and saving them on disk under /video folder
             These images will later be used to stich together into a video"""
         try:
             count = 0
+            if not os.path.isdir(self.directory):
+                os.mkdir(self.directory)
+                logging.info("Creating new directory: " + self.directory)
             while True:
-                if not os.path.isdir(self.directory):
-                    os.mkdir(self.directory)
-                    logging.info("Creating new directory: " + self.directory)
-                driver_.save_screenshot(self.directory+str(count)+".png")
+                driver_.save_screenshot(self.directory+"/"+str(count)+".png")
                 count += 1
                 if self.stop:
                     logging.info("Stopping Screen Capture")
@@ -112,11 +115,12 @@ class ScreenRecorder:
         except Exception as error:
             logger.error("An Exception occurred while taking screenshot. " + str(error))
 
-    def create_video_from_images(self, video_size: tuple, frame_rate: int):
+    def create_video_from_images(self, scenario_info, video_size: tuple, frame_rate: int):
         """This method will sticth the images under /video directory into a video"""
         try:
             fourcc = cv2.VideoWriter_fourcc(*'vp09')
-            video = cv2.VideoWriter("video.webm", fourcc, int(frame_rate), video_size)
+            video_name = f"{self.video_store}/{scenario_info}.webm"
+            video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
             images_path = os.listdir(self.directory)
             images_path = sorted(images_path, key=lambda x: int(os.path.splitext(x)[0]))
             for img in images_path:
@@ -124,6 +128,7 @@ class ScreenRecorder:
                     video.write(cv2.resize(cv2.imread(self.directory + img), video_size))
             video.release()
             logger.info("TEST EXECUTION VIDEO RECORDING VIDEO STOPPED [Video Size: " + str(video_size) + " - Frame Rate: " + str(frame_rate) + "]")
+            return video_name
         except Exception as error:
             logger.error("An Exception occurred while stitching video. " + str(error))
         finally:
@@ -182,6 +187,12 @@ def pytest_addoption(parser):
     # a percentage by which the video frames will be resized. valid values - 75, 60, 50, etc
     parser.addoption("--report_video_resize_percentage", action="store", default=0)
 
+    # path to folder where user wants to preserve screenshots
+    parser.addoption("--report_screenshot_dir", action="store", default=0)
+
+    # path to folder where user wants to preserve videos
+    parser.addoption("--report_video_dir", action="store", default=0)
+
 
 def pytest_bdd_before_scenario(request, feature, scenario):
     video_recording = request.getfixturevalue('report_video_recording_options')['video_recording']
@@ -193,13 +204,15 @@ def pytest_bdd_before_scenario(request, feature, scenario):
 
 def pytest_bdd_after_scenario(request, feature, scenario):
     video_info = request.getfixturevalue('report_video_recording_options')
+    # scenario_info = request.node.nodeid.replace("::", "_").replace("/", "__")
+    scenario_info = "video"
     if video_info['video_recording']:
         obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
         obj_recorder.stop = True
         obj_recorder_thread.join()
-        video_resize_info = _get_video_resize_resolution(video_info)
-        obj_recorder.create_video_from_images(video_resize_info, video_info['video_frame_rate'])
-        allure.attach.file("video.webm", name=scenario.name, attachment_type=AttachmentType.WEBM)
+        video_resize_info = _get_video_resize_resolution(video_info, obj_recorder)
+        file_name = obj_recorder.create_video_from_images(scenario_info, video_resize_info, video_info['video_frame_rate'])
+        allure.attach.file(file_name, name=scenario.name, attachment_type=AttachmentType.WEBM)
 
 
 @fixture(scope="session")
@@ -208,14 +221,16 @@ def report_screenshot_options(request) -> dict:
         "screenshot_level": request.config.getoption("report_screenshot_level"),
         "resize_percent": request.config.getoption("report_screenshot_resize_percent"),
         "resize_width": request.config.getoption("report_screenshot_width"),
-        "resize_height": request.config.getoption("report_screenshot_height")
+        "resize_height": request.config.getoption("report_screenshot_height"),
+        "screenshot_dir": request.config.getoption("report_screenshot_dir")
     }
 
     env_plugin_options: dict = {
         "screenshot_level": _get_env_var("REPORT_SCREENSHOT_LEVEL", default_value="all"),
         "resize_percent": _get_env_var("REPORT_SCREENSHOT_RESIZE_PERCENT"),
         "resize_width": _get_env_var("REPORT_SCREENSHOT_WIDTH"),
-        "resize_height": _get_env_var("REPORT_SCREENSHOT_HEIGHT")
+        "resize_height": _get_env_var("REPORT_SCREENSHOT_HEIGHT"),
+        "screenshot_dir": _get_env_var("REPORT_SCREENSHOT_DIR", default_value="screenshots/")
     }
 
     resize_percent = None
@@ -224,10 +239,17 @@ def report_screenshot_options(request) -> dict:
 
     screenshot_level = None
 
+    screenshot_dir = None
+
     if cmd_line_plugin_options['screenshot_level']:
         screenshot_level = cmd_line_plugin_options['screenshot_level']
     else:
         screenshot_level = env_plugin_options['screenshot_level']
+
+    if cmd_line_plugin_options['screenshot_dir']:
+        screenshot_dir = cmd_line_plugin_options['screenshot_dir']
+    else:
+        screenshot_dir = env_plugin_options['screenshot_dir']
 
     """
     Order of precedence for resize config:
@@ -253,6 +275,7 @@ def report_screenshot_options(request) -> dict:
 
     return {
         "screenshot_level": screenshot_level,
+        "screenshot_dir": screenshot_dir,
         "resize_percent": resize_percent,
         "resize_width": resize_width,
         "resize_height": resize_height
@@ -263,6 +286,7 @@ def report_screenshot_options(request) -> dict:
 def report_video_recording_options(request) -> dict:
     cmd_line_plugin_options: dict = {
         "video_recording": request.config.getoption("report_video_recording"),
+        "video_dir": request.config.getoption("report_video_dir"),
         "video_width": request.config.getoption("report_video_width"),
         "video_height": request.config.getoption("report_video_height"),
         "video_frame_rate": request.config.getoption("report_video_frame_rate"),
@@ -271,6 +295,7 @@ def report_video_recording_options(request) -> dict:
 
     env_plugin_options: dict = {
         "video_recording": _get_env_var("VIDEO_RECORDING", default_value=False),
+        "video_dir": _get_env_var("VIDEO_DIR", default_value="videos"),
         "video_width": _get_env_var("VIDEO_WIDTH"),
         "video_height": _get_env_var("VIDEO_HEIGHT"),
         "video_frame_rate": _get_env_var("VIDEO_FRAME_RATE", default_value=5),
@@ -282,11 +307,17 @@ def report_video_recording_options(request) -> dict:
     video_width = None
     video_frame_rate = None
     video_resize_percentage = None
+    video_dir = None
 
     if cmd_line_plugin_options['video_recording']:
         video_recording = str(cmd_line_plugin_options['video_recording']).lower() == 'true'
-    elif env_plugin_options['video_recording']:
+    else:
         video_recording = str(env_plugin_options['video_recording']).lower() == 'true'
+
+    if cmd_line_plugin_options['video_dir']:
+        video_dir = cmd_line_plugin_options['video_dir']
+    else:
+        video_dir = env_plugin_options['video_dir']
 
     if cmd_line_plugin_options['video_frame_rate']:
         video_frame_rate = cmd_line_plugin_options['video_frame_rate']
@@ -307,6 +338,7 @@ def report_video_recording_options(request) -> dict:
 
     return {
         "video_recording": video_recording,
+        "video_dir": video_dir,
         "video_height": video_height,
         "video_width": video_width,
         "video_frame_rate": video_frame_rate,
@@ -358,7 +390,8 @@ def _get_resized_image(image_bytes, options: dict):
     img.thumbnail(desired_resolution)
     # in tobytes() need to return the array before the join operation happens
     # return img.tobytes()
-    path: str = "../screenshot.png"
+
+    path: str = options["screenshot_dir"]+"/screenshotO.png"
     img.save(path)
     return path
 
@@ -369,25 +402,35 @@ def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
     return new_width, new_height
 
 
-def _get_video_resize_resolution(info):
-    desired_resolution = None
-    obj_screen_recorder = ScreenRecorder()
-    if info:
-        if info['video_width'] and info['video_height']:
-            # if a resolution is provided, use that
-            desired_resolution = (int(info['video_width']), int(info['video_height']))
-        elif info['video_resize_percentage']:
-            # if a percentage is provided, set the resize factor from default to user provided value
-            resize_factor = int(info['video_resize_percentage']) / 100
-            img = Image.open(os.path.join(obj_screen_recorder.directory, os.listdir(obj_screen_recorder.directory)[0]))
-            desired_resolution = __get_resized_resolution(img.width, img.height, resize_factor)
-
-    return desired_resolution
+def _get_video_resize_resolution(info, recorder):
+    try:
+        desired_resolution = None
+        directory = recorder.directory
+        if info:
+            if info['video_width'] and info['video_height']:
+                # if a resolution is provided, use that
+                desired_resolution = (int(info['video_width']), int(info['video_height']))
+            elif info['video_resize_percentage']:
+                # if a percentage is provided, set the resize factor from default to user provided value
+                resize_factor = int(info['video_resize_percentage']) / 100
+                img = Image.open(os.path.join(directory, os.listdir(directory)[0]))
+                desired_resolution = __get_resized_resolution(img.width, img.height, resize_factor)
+        return desired_resolution
+    except Exception as error:
+        logger.error("An Exception occurred while fetching video resize resolution. " + str(error))
+        # Now clean the images directory
+        _clean_image_repository(info["video_dir"])
 
 
 def _clean_image_repository(img_dir):
     # Now clean the images directory
-    for f in os.listdir(img_dir):
-        os.remove(os.path.join(img_dir, f))
-    os.rmdir(img_dir)
-    logger.info(f"IMAGE REPOSOTORY CLEANED. {img_dir} FOLDER DELETED.")
+    if os.path.isdir(img_dir):
+        for f in os.listdir(img_dir):
+            os.remove(os.path.join(img_dir, f))
+        os.rmdir(img_dir)
+        logger.info(f"IMAGE REPOSOTORY CLEANED. {img_dir} FOLDER DELETED.")
+
+
+def _mkdir(dir_name):
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
