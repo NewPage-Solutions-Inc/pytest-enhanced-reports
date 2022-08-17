@@ -1,13 +1,13 @@
 from selenium.webdriver.common.by import By
 
-SITE_URL = 'https://opensource-demo.orangehrmlive.com/index.php/auth/login'
+SITE_URL = 'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
 
 # Locators
 
-USERNAME = By.ID, "txtUsername"
-PASSWORD = By.ID, "txtPassword"
-LOGIN_BTN = By.ID, "btnLogin"
-FORGOT_PWD_LINK = By.CSS_SELECTOR, "#forgotPasswordLink a"
+USERNAME = By.NAME, "username"
+PASSWORD = By.NAME, "password"
+LOGIN_BTN = By.XPATH, "//button[@type='submit']"
+FORGOT_PWD_LINK = By.XPATH, "//p[text()='Forgot your password? ']"
 
 
 class LoginPage:
