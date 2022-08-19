@@ -7,7 +7,7 @@ setup(
     author='SDET',
     author_email='qa@newpage.io',
     license='proprietary',
-    py_modules=['enhanced_allure', 'allure_screenshot', 'allure_video_recording'],
+    py_modules=['enhanced_allure', 'allure_screenshot', 'allure_video_recording', 'common_utils'],
     install_requires=[
         "selenium >=4.0.0, <4.1.4",
         "pytest >=6.2.5, < 7.0.0",

@@ -23,16 +23,17 @@ LOGIN_FIELD_MESSAGE = By.XPATH, "//span[text()='Required']"
 @given('the OpenHRM home page is displayed')
 def open_url(selenium):
     LoginPage(selenium).navigate_to_url()
+
     assert selenium.find_element(*login_page.USERNAME).is_displayed()
 
 
-@when(parsers.parse('the user enters username "{username}"'))
+@when(parsers.parse('the user enters username {username}'))
 def enter_username(selenium, username):
     LoginPage(selenium).set_username(username)
     logger.info('Username set')
 
 
-@when(parsers.parse('the user enters password "{password}"'))
+@when(parsers.parse('the user enters password {password}'))
 def enter_password(selenium, password):
     LoginPage(selenium).set_password(password)
     logger.info('Password set')

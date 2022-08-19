@@ -1,10 +1,9 @@
 import logging
-import os
 import dotenv
-
-from typing import Tuple
+import threading
 
 from pytest import fixture
+import pytest
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -14,9 +13,9 @@ from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriv
 
 from allure_screenshot import WebDriverEventListener
 import allure_screenshot
+from allure_video_recording import ScreenRecorder
 
-from allure_screenshot import report_screenshot_options
-from allure_video_recording import report_video_recording_options, screen_recorder, video_capture_thread
+import common_utils
 
 dotenv.load_dotenv()
 
@@ -31,7 +30,7 @@ def screenshotting_driver(report_screenshot_options):
             return driver
 
         # check if the directory to write screenshots exists
-        _mkdir(report_screenshot_options["screenshot_dir"])
+        common_utils._mkdir(report_screenshot_options["screenshot_dir"])
         return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options))
     return _enhanced_driver_getter
 
@@ -52,24 +51,200 @@ def create_wrappers(report_screenshot_options):
         allure_screenshot._take_screenshot("After performing selenium action chain", report_screenshot_options, instance._driver)
 
 
-def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
-    report_screenshot_options = request.getfixturevalue('report_screenshot_options')
+@fixture(scope="session")
+def report_screenshot_options(request) -> dict:
+    cmd_line_plugin_options: dict = {
+        "screenshot_level": request.config.getoption("report_screenshot_level"),
+        "resize_percent": request.config.getoption("report_screenshot_resize_percent"),
+        "resize_width": request.config.getoption("report_screenshot_width"),
+        "resize_height": request.config.getoption("report_screenshot_height"),
+        "screenshot_dir": request.config.getoption("report_screenshot_dir"),
+        "keep_screenshots": request.config.getoption("report_keep_screenshots")
+    }
 
-    if report_screenshot_options['screenshot_level'] == 'none':
-        return
+    env_plugin_options: dict = {
+        "screenshot_level": common_utils._get_env_var("REPORT_SCREENSHOT_LEVEL", default_value="all"),
+        "resize_percent": common_utils._get_env_var("REPORT_SCREENSHOT_RESIZE_PERCENT"),
+        "resize_width": common_utils._get_env_var("REPORT_SCREENSHOT_WIDTH"),
+        "resize_height": common_utils._get_env_var("REPORT_SCREENSHOT_HEIGHT"),
+        "screenshot_dir": common_utils._get_env_var("REPORT_SCREENSHOT_DIR", default_value="screenshots/"),
+        "keep_screenshots": common_utils._get_env_var("REPORT_KEEP_SCREENSHOTS", default_value=False)
+    }
 
-    driver = request.getfixturevalue('selenium')
-    allure_screenshot._take_screenshot("Step failed", driver, report_screenshot_options)
+    resize_percent = None
+    resize_width = None
+    resize_height = None
+
+    screenshot_level = None
+    screenshot_dir = None
+    keep_screenshots = None
+
+    if cmd_line_plugin_options['screenshot_level']:
+        screenshot_level = cmd_line_plugin_options['screenshot_level']
+    else:
+        screenshot_level = env_plugin_options['screenshot_level']
+
+    if cmd_line_plugin_options['screenshot_dir']:
+        screenshot_dir = cmd_line_plugin_options['screenshot_dir']
+    else:
+        screenshot_dir = env_plugin_options['screenshot_dir']
+
+    if cmd_line_plugin_options['keep_screenshots']:
+        keep_screenshots = str(cmd_line_plugin_options['keep_screenshots']).lower() == 'true'
+    else:
+        keep_screenshots = str(env_plugin_options['keep_screenshots']).lower() == 'true'
+
+    """
+    Order of precedence for resize config:
+    1. Specific resolution
+        1.1 - From command line options
+        1.2 - From environment variables
+    2. Resize percentage
+        2.1 - From command line option
+        2.2 - From environment variable
+    3. Default value (defined in the resize method)
+    """
+    if cmd_line_plugin_options['resize_width'] and cmd_line_plugin_options['resize_height']:
+        resize_width = cmd_line_plugin_options['resize_width']
+        resize_height = cmd_line_plugin_options['resize_height']
+    elif env_plugin_options['resize_width'] and env_plugin_options['resize_height']:
+        resize_width = env_plugin_options['resize_width']
+        resize_height = env_plugin_options['resize_height']
+    else:
+        if cmd_line_plugin_options['resize_percent']:
+            resize_percent = cmd_line_plugin_options['resize_percent']
+        elif env_plugin_options['resize_percent']:
+            resize_percent = env_plugin_options['resize_percent']
+
+    return {
+        "screenshot_level": screenshot_level,
+        "screenshot_dir": screenshot_dir,
+        "resize_percent": resize_percent,
+        "resize_width": resize_width,
+        "resize_height": resize_height,
+        "keep_screenshots": keep_screenshots
+    }
 
 
-def pytest_bdd_step_error(request, feature, scenario, step, step_func):
-    report_screenshot_options = request.getfixturevalue('report_screenshot_options')
+@pytest.fixture
+def screen_recorder(report_video_recording_options):
+    obj = ScreenRecorder()
+    obj.video_store = report_video_recording_options["video_dir"]
+    if 'scenario_name' in report_video_recording_options:
+        obj.directory = report_video_recording_options['scenario_name']
 
-    if report_screenshot_options['screenshot_level'] == 'none':
-        return
+    common_utils._mkdir(obj.video_store)
+    yield obj
 
-    driver = request.getfixturevalue('selenium')
-    allure_screenshot._take_screenshot("Step failed", driver, report_screenshot_options)
+
+@pytest.fixture
+def video_capture_thread(screen_recorder, selenium):
+    recorder_thread = threading.Thread(target=screen_recorder.start_capturing, name='Recorder', args=[selenium])
+    yield recorder_thread, screen_recorder
+
+
+@fixture(scope="session")
+def report_video_recording_options(request) -> dict:
+    cmd_line_plugin_options: dict = {
+        "video_recording": request.config.getoption("report_video_recording"),
+        "video_dir": request.config.getoption("report_video_dir"),
+        "video_width": request.config.getoption("report_video_width"),
+        "video_height": request.config.getoption("report_video_height"),
+        "video_frame_rate": request.config.getoption("report_video_frame_rate"),
+        "video_resize_percentage": request.config.getoption("report_video_resize_percentage"),
+        "keep_videos": request.config.getoption("report_keep_videos")
+    }
+
+    env_plugin_options: dict = {
+        "video_recording": common_utils._get_env_var("REPORT_VIDEO_RECORDING", default_value=False),
+        "video_dir": common_utils._get_env_var("REPORT_VIDEO_DIR", default_value="videos"),
+        "video_width": common_utils._get_env_var("REPORT_VIDEO_WIDTH"),
+        "video_height": common_utils._get_env_var("REPORT_VIDEO_HEIGHT"),
+        "video_frame_rate": common_utils._get_env_var("REPORT_VIDEO_FRAME_RATE", default_value=5),
+        "video_resize_percentage": common_utils._get_env_var("REPORT_VIDEO_RESIZE_PERCENTAGE", default_value=30),
+        "keep_videos": common_utils._get_env_var("REPORT_KEEP_VIDEOS", default_value=False)
+    }
+
+    video_recording = None
+    video_height = None
+    video_width = None
+    video_frame_rate = None
+    video_resize_percentage = None
+    video_dir = None
+    keep_videos = None
+
+    if cmd_line_plugin_options['video_recording']:
+        video_recording = str(cmd_line_plugin_options['video_recording']).lower() == 'true'
+    else:
+        video_recording = str(env_plugin_options['video_recording']).lower() == 'true'
+
+    if cmd_line_plugin_options['video_dir']:
+        video_dir = cmd_line_plugin_options['video_dir']
+    else:
+        video_dir = env_plugin_options['video_dir']
+
+    if cmd_line_plugin_options['video_frame_rate']:
+        video_frame_rate = cmd_line_plugin_options['video_frame_rate']
+    elif env_plugin_options['video_frame_rate']:
+        video_frame_rate = env_plugin_options['video_frame_rate']
+
+    if cmd_line_plugin_options['keep_videos']:
+        keep_videos = str(cmd_line_plugin_options['keep_videos']).lower() == 'true'
+    else:
+        keep_videos = str(env_plugin_options['keep_videos']).lower() == 'true'
+
+    if cmd_line_plugin_options['video_width'] and cmd_line_plugin_options['video_height']:
+        video_width = cmd_line_plugin_options['video_width']
+        video_height = cmd_line_plugin_options['video_height']
+    elif env_plugin_options['video_width'] and env_plugin_options['video_height']:
+        video_width = env_plugin_options['video_width']
+        video_height = env_plugin_options['video_height']
+    else:
+        if cmd_line_plugin_options['video_resize_percentage']:
+            video_resize_percentage = cmd_line_plugin_options['video_resize_percentage']
+        elif env_plugin_options['video_resize_percentage']:
+            video_resize_percentage = env_plugin_options['video_resize_percentage']
+
+    return {
+        "video_recording": video_recording,
+        "video_dir": video_dir,
+        "video_height": video_height,
+        "video_width": video_width,
+        "video_frame_rate": video_frame_rate,
+        "video_resize_percentage": video_resize_percentage,
+        "keep_videos": keep_videos
+    }
+
+
+@fixture
+def update_options(report_screenshot_options, report_video_recording_options, request):
+    if report_screenshot_options['screenshot_level'] != 'none':
+        report_screenshot_options["scenario_name"] = request.node.nodeid.split('/')[-1].replace("::", " - ")
+    if report_video_recording_options['video_recording']:
+        report_video_recording_options["scenario_name"] = request.node.nodeid.split('/')[-1].replace("::", " - ")
+
+    return report_screenshot_options
+
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup(request):
+    """Cleanup a testing directory once we are finished."""
+    try:
+        video_options = request.getfixturevalue('report_video_recording_options')
+        screenshot_options = request.getfixturevalue('report_screenshot_options')
+
+        def remove_test_dir(video_options_, screenshot_options_):
+            if not video_options_['keep_videos']:
+                common_utils._clean_image_repository(video_options_['video_dir'])
+
+            if not screenshot_options_['keep_screenshots']:
+                common_utils._clean_image_repository(screenshot_options_['screenshot_dir'])
+            else:
+                common_utils._clean_temp_images(screenshot_options_['screenshot_dir'])
+
+        request.addfinalizer(lambda: remove_test_dir(video_options, screenshot_options))
+    except Exception as error:
+        logger.error(f"Error occurred while cleaning up: {error}")
 
 
 def pytest_addoption(parser):
@@ -117,6 +292,7 @@ def pytest_addoption(parser):
 
 
 def pytest_bdd_before_scenario(request, feature, scenario):
+    options = request.getfixturevalue('update_options')
     video_recording = request.getfixturevalue('report_video_recording_options')['video_recording']
     if video_recording:
         obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
@@ -124,34 +300,31 @@ def pytest_bdd_before_scenario(request, feature, scenario):
     logging.info("TEST EXECUTION VIDEO RECORDING: " + str(video_recording))
 
 
+def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
+    report_screenshot_options = request.getfixturevalue('report_screenshot_options')
+
+    if report_screenshot_options['screenshot_level'] == 'none':
+        return
+
+    driver = request.getfixturevalue('selenium')
+    allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
+
+
+def pytest_bdd_step_error(request, feature, scenario, step, step_func):
+    report_screenshot_options = request.getfixturevalue('report_screenshot_options')
+
+    if report_screenshot_options['screenshot_level'] == 'none':
+        return
+
+    driver = request.getfixturevalue('selenium')
+    allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
+
+
 def pytest_bdd_after_scenario(request, feature, scenario):
-    video_info = request.getfixturevalue('report_video_recording_options')
-    if video_info['video_recording']:
-        scenario_info = "video"
+    video_options = request.getfixturevalue('report_video_recording_options')
+    screenshot_options = request.getfixturevalue('report_screenshot_options')
+    if video_options['video_recording']:
+        scenario_info = video_options["scenario_name"]
         obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
-        obj_recorder.stop_recording_and_stitch_video(video_info, obj_recorder_thread, scenario_info, scenario.name)
-
-
-def _get_env_var(env_var_name, default_value=None):
-    return os.getenv(env_var_name, default_value)
-
-
-def __get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
-    new_width = int(width * resize_factor)
-    new_height = int(height * resize_factor)
-    return new_width, new_height
-
-
-def _mkdir(dir_name):
-    if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
-
-
-def _clean_image_repository(img_dir):
-    # Now clean the images directory
-    if os.path.isdir(img_dir):
-        for f in os.listdir(img_dir):
-            os.remove(os.path.join(img_dir, f))
-        os.rmdir(img_dir)
-        logger.info(f"IMAGE REPOSOTORY CLEANED. {img_dir} FOLDER DELETED.")
+        obj_recorder.stop_recording_and_stitch_video(video_options, obj_recorder_thread, scenario_info, scenario.name)
 
