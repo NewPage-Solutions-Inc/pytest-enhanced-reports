@@ -15,6 +15,10 @@ from allure_screenshot import WebDriverEventListener
 import allure_screenshot
 from allure_video_recording import ScreenRecorder
 
+from allure_commons.lifecycle import AllureLifecycle
+from allure_commons.model2 import TestResult
+from allure_commons import plugin_manager
+
 import common_utils
 
 dotenv.load_dotenv()
@@ -216,14 +220,19 @@ def report_video_recording_options(request) -> dict:
     }
 
 
-@fixture
-def update_options(report_screenshot_options, report_video_recording_options, request):
+@pytest.fixture
+def update_test_name_in_options(report_screenshot_options, report_video_recording_options, request):
     if report_screenshot_options['screenshot_level'] != 'none':
         report_screenshot_options["scenario_name"] = request.node.nodeid.split('/')[-1].replace("::", " - ")
     if report_video_recording_options['video_recording']:
         report_video_recording_options["scenario_name"] = request.node.nodeid.split('/')[-1].replace("::", " - ")
 
-    return report_screenshot_options
+    return report_screenshot_options, report_video_recording_options
+
+
+@pytest.fixture(scope="session", autouse=True)
+def update_test_results_for_scenario_outline():
+    AllureLifecycle.write_test_case = _custom_write_test_case
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -292,8 +301,8 @@ def pytest_addoption(parser):
 
 
 def pytest_bdd_before_scenario(request, feature, scenario):
-    options = request.getfixturevalue('update_options')
-    video_recording = request.getfixturevalue('report_video_recording_options')['video_recording']
+    screenshot_options, video_options = request.getfixturevalue('update_test_name_in_options')
+    video_recording = video_options['video_recording']
     if video_recording:
         obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
         obj_recorder_thread.start()
@@ -327,4 +336,19 @@ def pytest_bdd_after_scenario(request, feature, scenario):
         scenario_info = video_options["scenario_name"]
         obj_recorder_thread, obj_recorder = request.getfixturevalue('video_capture_thread')
         obj_recorder.stop_recording_and_stitch_video(video_options, obj_recorder_thread, scenario_info, scenario.name)
+
+
+def _custom_write_test_case(self, uuid=None):
+    # update test results and skip params if the scenario outlines are executed
+    test_result = self._pop_item(uuid=uuid, item_type=TestResult)
+    if test_result:
+        if test_result.parameters:
+            adj_parameters = []
+            for param in test_result.parameters:
+                if param.name != '_pytest_bdd_example':
+                    # do not include parameters with "_pytest_bdd_example"
+                    adj_parameters.append(param)
+            test_result.parameters = adj_parameters
+
+        plugin_manager.hook.report_result(result=test_result)
 

@@ -47,3 +47,7 @@ def _clean_temp_images(img_dir, file_name=None):
     else:
         os.remove(os.path.join(img_dir, file_name))
 
+
+def _clean_filename(sourcestring,  removestring ="%:/,\\[]<>*?"):
+    # remove the undesirable characters
+    return ''.join([c for c in sourcestring if c not in removestring])

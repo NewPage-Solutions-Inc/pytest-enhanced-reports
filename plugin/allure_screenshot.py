@@ -57,7 +57,7 @@ def _take_screenshot(screenshot_name: str, plugin_options, driver: WebDriver):
 def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.png"):
     desired_resolution = None
     screenshot_file_name = f"{screenshot_name} {str(datetime.now())}.png"
-    screenshot_file_name = clean_filename(screenshot_file_name)
+    screenshot_file_name = common_utils._clean_filename(screenshot_file_name)
 
     # default resize factor if no values are passed from cmd line args or env vars
     resize_factor: float = 0.3
@@ -92,6 +92,4 @@ def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.p
     return path
 
 
-def clean_filename(sourcestring,  removestring ="%:/,\\[]<>*?"):
-    #remove the undesireable characters
-    return ''.join([c for c in sourcestring if c not in removestring])
+
