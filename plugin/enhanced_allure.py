@@ -2,6 +2,7 @@ import logging
 import dotenv
 import threading
 
+from allure_pytest_bdd.pytest_bdd_listener import PytestBDDListener
 from pytest import fixture
 import pytest
 
@@ -18,6 +19,7 @@ from allure_video_recording import ScreenRecorder
 from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
+from allure_commons.model2 import TestStepResult
 
 import common_utils
 
@@ -231,11 +233,6 @@ def update_test_name_in_options(report_screenshot_options, report_video_recordin
 
 
 @pytest.fixture(scope="session", autouse=True)
-def update_test_results_for_scenario_outline():
-    AllureLifecycle.write_test_case = _custom_write_test_case
-
-
-@pytest.fixture(scope="session", autouse=True)
 def cleanup(request):
     """Cleanup a testing directory once we are finished."""
     try:
@@ -254,6 +251,11 @@ def cleanup(request):
         request.addfinalizer(lambda: remove_test_dir(video_options, screenshot_options))
     except Exception as error:
         logger.error(f"Error occurred while cleaning up: {error}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def update_test_results_for_scenario_outline():
+    AllureLifecycle.write_test_case = _custom_write_test_case
 
 
 def pytest_addoption(parser):
@@ -319,6 +321,10 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
     allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
 
 
+def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
+    """"""
+    return True
+
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     report_screenshot_options = request.getfixturevalue('report_screenshot_options')
 
@@ -351,4 +357,29 @@ def _custom_write_test_case(self, uuid=None):
             test_result.parameters = adj_parameters
 
         plugin_manager.hook.report_result(result=test_result)
+
+
+@fixture(scope="session", autouse=True)
+def wrapper_for_unexecuted_steps():
+    @wrapt.patch_function_wrapper(PytestBDDListener, '_scenario_finalizer')
+    def wrap_scenario_finalizer(wrapped, instance, args, kwargs):
+        # here, wrapped is the original perform method in PytestBDDListener
+        # instance is `self` (it is not the case for classmethods though),
+        # args and kwargs are a tuple and a dict respectively.
+
+        wrapped(*args, **kwargs)  # note it is already bound to the instance
+
+        test_result = instance.lifecycle._get_item(uuid=instance.lifecycle._last_item_uuid(item_type=TestResult),
+                                     item_type=TestResult)
+        for step in args[0].steps:
+            step_executed = False
+            for step_result in test_result.steps:
+                if f"{step.keyword} {step.name}" == step_result.name:
+                    step_executed = True
+                    break
+            if not step_executed:
+                test_result.steps.append(
+                    TestStepResult(name=f'{step.name}', status='skipped'))
+
+        test_result.steps.append(TestStepResult(name='Dummy Step/"', status='skipped', statusDetails=None, stage=None, description=None, descriptionHtml=None, steps=[], attachments=[], parameters=[], start=1661336883036, stop=1661336885100, id=None))
 
