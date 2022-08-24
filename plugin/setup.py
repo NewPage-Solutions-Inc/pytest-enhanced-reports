@@ -7,7 +7,7 @@ setup(
     author='SDET',
     author_email='qa@newpage.io',
     license='proprietary',
-    py_modules=['enhanced_allure'],
+    py_modules=['enhanced_allure', 'allure_screenshot', 'allure_video_recording', 'common_utils'],
     install_requires=[
         "selenium >=4.0.0, <4.1.4",
         "pytest >=6.2.5, < 7.0.0",
@@ -17,6 +17,7 @@ setup(
         "python-dotenv >=0.15.0, <1.0.0",
         "Pillow >=8.4.0, <9.0.0",
         "wrapt >=1.14.1, <2.0.0",
+        "opencv-python",
     ],
     entry_points={'pytest11': ["enhanced_allure_report = enhanced_allure"]},
     classifiers=["Framework :: Pytest"],
