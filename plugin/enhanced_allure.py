@@ -341,7 +341,10 @@ def pytest_bdd_after_scenario(request, feature, scenario):
 
 
 def _custom_write_test_case(self, uuid=None):
-    # update test results and skip params if the scenario outlines are executed
+    """Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
+    inclusion of tests with scenario outlines in allure report. There is no fix available yet so we manually remove the
+    params which are equals to '_pytest_bdd_example', this param if included in test results, causes errors in report
+    generation hence report doesnt include scenario outlines"""
     test_result = self._pop_item(uuid=uuid, item_type=TestResult)
     if test_result:
         if test_result.parameters:
@@ -357,6 +360,10 @@ def _custom_write_test_case(self, uuid=None):
 
 @fixture(scope="session", autouse=True)
 def wrapper_for_unexecuted_steps():
+    """ When a bdd step fails, test execution is stopped hence next steps are not executed,
+    allure report doesn't include the steps that were not executed due to a failed step before them
+    To overcome this issue we are intercepting the PytestBDDListener._scenario_finalizer method to add the
+    non executed steps to test results """
     @wrapt.patch_function_wrapper(PytestBDDListener, '_scenario_finalizer')
     def wrap_scenario_finalizer(wrapped, instance, args, kwargs):
         # here, wrapped is the original perform method in PytestBDDListener
