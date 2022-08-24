@@ -321,10 +321,6 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
     allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
 
 
-def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
-    """"""
-    return True
-
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     report_screenshot_options = request.getfixturevalue('report_screenshot_options')
 
@@ -371,15 +367,9 @@ def wrapper_for_unexecuted_steps():
 
         test_result = instance.lifecycle._get_item(uuid=instance.lifecycle._last_item_uuid(item_type=TestResult),
                                      item_type=TestResult)
-        for step in args[0].steps:
-            step_executed = False
-            for step_result in test_result.steps:
-                if f"{step.keyword} {step.name}" == step_result.name:
-                    step_executed = True
-                    break
-            if not step_executed:
+        if len(args[0].steps) != len(test_result.steps):
+            for i in range(len(test_result.steps), len(args[0].steps)):
                 test_result.steps.append(
-                    TestStepResult(name=f'{step.name}', status='skipped'))
+                    TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
 
-        test_result.steps.append(TestStepResult(name='Dummy Step/"', status='skipped', statusDetails=None, stage=None, description=None, descriptionHtml=None, steps=[], attachments=[], parameters=[], start=1661336883036, stop=1661336885100, id=None))
 
