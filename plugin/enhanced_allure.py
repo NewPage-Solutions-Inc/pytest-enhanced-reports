@@ -374,7 +374,7 @@ def wrapper_for_unexecuted_steps():
 
         test_result = instance.lifecycle._get_item(uuid=instance.lifecycle._last_item_uuid(item_type=TestResult),
                                      item_type=TestResult)
-        if len(args[0].steps) != len(test_result.steps):
+        if len(args[0].steps) > len(test_result.steps):
             for i in range(len(test_result.steps), len(args[0].steps)):
                 test_result.steps.append(
                     TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
