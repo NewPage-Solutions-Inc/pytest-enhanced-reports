@@ -2,6 +2,7 @@ import logging
 import dotenv
 import threading
 
+from allure_pytest_bdd.pytest_bdd_listener import PytestBDDListener
 from pytest import fixture
 import pytest
 
@@ -18,6 +19,7 @@ from allure_video_recording import ScreenRecorder
 from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
+from allure_commons.model2 import TestStepResult
 
 import common_utils
 
@@ -231,11 +233,6 @@ def update_test_name_in_options(report_screenshot_options, report_video_recordin
 
 
 @pytest.fixture(scope="session", autouse=True)
-def update_test_results_for_scenario_outline():
-    AllureLifecycle.write_test_case = _custom_write_test_case
-
-
-@pytest.fixture(scope="session", autouse=True)
 def cleanup(request):
     """Cleanup a testing directory once we are finished."""
     try:
@@ -254,6 +251,11 @@ def cleanup(request):
         request.addfinalizer(lambda: remove_test_dir(video_options, screenshot_options))
     except Exception as error:
         logger.error(f"Error occurred while cleaning up: {error}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def update_test_results_for_scenario_outline():
+    AllureLifecycle.write_test_case = _custom_write_test_case
 
 
 def pytest_addoption(parser):
@@ -339,7 +341,10 @@ def pytest_bdd_after_scenario(request, feature, scenario):
 
 
 def _custom_write_test_case(self, uuid=None):
-    # update test results and skip params if the scenario outlines are executed
+    """Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
+    inclusion of tests with scenario outlines in allure report. There is no fix available yet so we manually remove the
+    params which are equals to '_pytest_bdd_example', this param if included in test results, causes errors in report
+    generation hence report doesnt include scenario outlines"""
     test_result = self._pop_item(uuid=uuid, item_type=TestResult)
     if test_result:
         if test_result.parameters:
@@ -351,4 +356,27 @@ def _custom_write_test_case(self, uuid=None):
             test_result.parameters = adj_parameters
 
         plugin_manager.hook.report_result(result=test_result)
+
+
+@fixture(scope="session", autouse=True)
+def wrapper_for_unexecuted_steps():
+    """ When a bdd step fails, test execution is stopped hence next steps are not executed,
+    allure report doesn't include the steps that were not executed due to a failed step before them
+    To overcome this issue we are intercepting the PytestBDDListener._scenario_finalizer method to add the
+    non executed steps to test results """
+    @wrapt.patch_function_wrapper(PytestBDDListener, '_scenario_finalizer')
+    def wrap_scenario_finalizer(wrapped, instance, args, kwargs):
+        # here, wrapped is the original perform method in PytestBDDListener
+        # instance is `self` (it is not the case for classmethods though),
+        # args and kwargs are a tuple and a dict respectively.
+
+        wrapped(*args, **kwargs)  # note it is already bound to the instance
+
+        test_result = instance.lifecycle._get_item(uuid=instance.lifecycle._last_item_uuid(item_type=TestResult),
+                                     item_type=TestResult)
+        if len(args[0].steps) > len(test_result.steps):
+            for i in range(len(test_result.steps), len(args[0].steps)):
+                test_result.steps.append(
+                    TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
+
 
