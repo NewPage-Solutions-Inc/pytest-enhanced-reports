@@ -307,7 +307,6 @@ def pytest_addoption(parser):
 
     # flag is used to decide whether user wants to capture all console output when test is failed
     parser.addoption("--capture_log_on_failure", action="store", default=0)
-    parser.addoption("--log_dir", action="store", default=0)
 
 
 def pytest_bdd_before_scenario(request, feature, scenario):
