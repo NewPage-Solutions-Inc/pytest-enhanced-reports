@@ -5,7 +5,7 @@ from allure_commons.types import AttachmentType
 from datetime import datetime
 
 
-def capture_output_and_attach_to_allure(file_name: str, options: dict, driver: WebDriver):
+def capture_output_and_attach_to_allure(driver: WebDriver):
     # get logs
     logs = _capture_output(driver)
     allure.attach(bytes(_format_outputs(logs), 'utf-8'), 'Browser Outputs', attachment_type=AttachmentType.TEXT)

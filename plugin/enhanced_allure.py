@@ -136,13 +136,6 @@ def report_screenshot_options(request) -> dict:
     }
 
 
-@fixture(scope="session")
-def capture_browser_outputs_options(request) -> dict:
-    return {
-        "output_dir": request.config.getoption("log_dir")
-    }
-
-
 @pytest.fixture
 def screen_recorder(report_video_recording_options):
     obj = ScreenRecorder()
@@ -344,10 +337,9 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
         allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
 
     # capture browser's outputs on failure
-    report_screenshot_options = request.getfixturevalue('capture_browser_outputs_options')
     capture_log_on_failure = request.config.getoption('capture_log_on_failure')
     if capture_log_on_failure:
-        browser_output_manager.capture_output_and_attach_to_allure('Browser Outputs', report_screenshot_options, driver)
+        browser_output_manager.capture_output_and_attach_to_allure(driver)
 
 
 def pytest_bdd_after_scenario(request, feature, scenario):

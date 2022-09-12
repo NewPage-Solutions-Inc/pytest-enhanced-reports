@@ -145,7 +145,7 @@ def selenium(selenium, resize_info):
 ## Capture browser's output when tests are failing
 This option is to capture browser's outputs when test is failing
 ```bash
-pytest --alluredir=reports --driver-path deb/chromedriver --log_dir reports --variables capabilities.json --driver Chrome --variables capabilities.json --capture_log_on_failure=True
+pytest --alluredir=reports --driver-path deb/chromedriver --variables capabilities.json --driver Chrome --variables capabilities.json --capture_log_on_failure=True
 ```
 
 capabilities.json
