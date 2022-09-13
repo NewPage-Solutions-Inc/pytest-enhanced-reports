@@ -160,8 +160,13 @@ capabilities.json
 }
 ```
 
----
 --capture_log_on_failure: set this to True if you want to turn it on  
 --log_dir: path to output folder  
 
+#### Always capture browser's outputs
+use this flag to always capture logs after an event is executed
 
+```bash
+pytest --driver Chrome --alluredir=reports --driver-path deb/chromedriver --variables capabilities.json --always_capture_log=True
+```
+--always_capture_log=True: capture browser's outputs after an action is executed
