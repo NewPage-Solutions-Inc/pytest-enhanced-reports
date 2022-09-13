@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @fixture(scope="session", autouse=True)
-def screenshotting_driver(report_screenshot_options):
+def screenshotting_driver(report_screenshot_options, load_other_configs):
     def _enhanced_driver_getter(driver: WebDriver):
         # Event listener is needed only if the screenshot level is greater than 'error-only'
         if report_screenshot_options['screenshot_level'] != 'all':
@@ -39,7 +39,7 @@ def screenshotting_driver(report_screenshot_options):
 
         # check if the directory to write screenshots exists
         common_utils._mkdir(report_screenshot_options["screenshot_dir"])
-        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, capture_browser_log_options))
+        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, load_other_configs))
     return _enhanced_driver_getter
 
 
@@ -135,9 +135,10 @@ def report_screenshot_options(request) -> dict:
 
 
 @fixture(scope="session")
-def capture_browser_log_options(request) -> dict:
+def load_other_configs(request) -> dict:
     return {
-        "always_capture_log": request.config.getoption("always_capture_log")
+        "always_capture_log": True if request.config.getoption("always_capture_log") == 'True' else False,
+        "highlight_element": True if request.config.getoption("highlight_element") == 'True' else False
     }
 
 
@@ -315,6 +316,10 @@ def pytest_addoption(parser):
 
     # flag is used to decide whether user wants to capture console output on each action
     parser.addoption("--always_capture_log", action="store", default=0)
+
+    # flag is used to decide whether user wants to highlight element and capture screenshot of that element before
+    # interacting with this element
+    parser.addoption("--highlight_element", action="store", default=False)
 
 
 def pytest_bdd_before_scenario(request, feature, scenario):
