@@ -12,7 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import wrapt
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 
-from allure_screenshot import WebDriverEventListener
+from webdriver_event_listener import WebDriverEventListener
 import allure_screenshot
 from allure_video_recording import ScreenRecorder
 
@@ -20,8 +20,6 @@ from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
 from allure_commons.model2 import TestStepResult
-import allure
-import base64
 import browser_output_manager
 
 
@@ -41,7 +39,7 @@ def screenshotting_driver(report_screenshot_options):
 
         # check if the directory to write screenshots exists
         common_utils._mkdir(report_screenshot_options["screenshot_dir"])
-        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options))
+        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, capture_browser_log_options))
     return _enhanced_driver_getter
 
 
@@ -133,6 +131,13 @@ def report_screenshot_options(request) -> dict:
         "resize_width": resize_width,
         "resize_height": resize_height,
         "keep_screenshots": keep_screenshots
+    }
+
+
+@fixture(scope="session")
+def capture_browser_log_options(request) -> dict:
+    return {
+        "always_capture_log": request.config.getoption("always_capture_log")
     }
 
 
@@ -308,6 +313,9 @@ def pytest_addoption(parser):
     # flag is used to decide whether user wants to capture all console output when test is failed
     parser.addoption("--capture_log_on_failure", action="store", default=0)
 
+    # flag is used to decide whether user wants to capture console output on each action
+    parser.addoption("--always_capture_log", action="store", default=0)
+
 
 def pytest_bdd_before_scenario(request, feature, scenario):
     screenshot_options, video_options = request.getfixturevalue('update_test_name_in_options')
@@ -389,3 +397,10 @@ def wrapper_for_unexecuted_steps():
                 test_result.steps.append(
                     TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
 
+
+def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
+    driver = request.getfixturevalue('selenium')
+    # capture browser's outputs
+    always_capture_log = request.config.getoption('always_capture_log')
+    if always_capture_log:
+        browser_output_manager.capture_output_and_attach_to_allure(driver)
