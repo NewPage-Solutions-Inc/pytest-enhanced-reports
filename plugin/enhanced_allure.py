@@ -396,11 +396,3 @@ def wrapper_for_unexecuted_steps():
             for i in range(len(test_result.steps), len(args[0].steps)):
                 test_result.steps.append(
                     TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
-
-
-def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func_args):
-    driver = request.getfixturevalue('selenium')
-    # capture browser's outputs
-    always_capture_log = request.config.getoption('always_capture_log')
-    if always_capture_log:
-        browser_output_manager.capture_output_and_attach_to_allure(driver)
