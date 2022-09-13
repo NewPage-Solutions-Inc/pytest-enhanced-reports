@@ -1,6 +1,6 @@
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.remote.webdriver import WebDriver
-from allure_screenshot import _take_screenshot
+from allure_screenshot import _take_screenshot, highlight_element_and_take_a_screenshot
 from browser_output_manager import capture_output_and_attach_to_allure
 
 
@@ -14,8 +14,11 @@ class WebDriverEventListener(AbstractEventListener):
         if self.browser_output_plugin_options:
             capture_output_and_attach_to_allure(driver)
 
+    def before_click(self, element, driver):
+        highlight_element_and_take_a_screenshot(element, "Before click", self.screen_shot_plugin_options, driver)
+
     def after_click(self, element, driver):
-        _take_screenshot("Click", self.screen_shot_plugin_options, driver)
+        _take_screenshot("After click", self.screen_shot_plugin_options, driver)
         if self.browser_output_plugin_options:
             capture_output_and_attach_to_allure(driver)
 

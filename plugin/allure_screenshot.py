@@ -74,4 +74,15 @@ def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.p
     return path
 
 
+def highlight_element_and_take_a_screenshot(element, action_name, screen_shot_plugin_options, driver: WebDriver, color="red", border_width=5):
+    def apply_style(s):
+        driver.execute_script(
+            "arguments[0].setAttribute('style', arguments[1]);", element, s
+        )
 
+    original_style = element.get_attribute("style")
+    apply_style(
+        "border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5)
+    )
+    _take_screenshot(action_name, screen_shot_plugin_options, driver)
+    apply_style(original_style)
