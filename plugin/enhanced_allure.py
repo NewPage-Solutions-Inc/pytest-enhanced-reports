@@ -36,7 +36,7 @@ def screenshotting_driver(report_screenshot_options):
             return driver
 
         # check if the directory to write screenshots exists
-        common_utils._mkdir(report_screenshot_options["screenshot_dir"])
+        common_utils.mkdir(report_screenshot_options["screenshot_dir"])
         return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options))
     return _enhanced_driver_getter
 
@@ -54,7 +54,7 @@ def create_wrappers(report_screenshot_options):
 
         wrapped(*args, **kwargs)  # note it is already bound to the instance
 
-        allure_screenshot._take_screenshot("After performing selenium action chain", report_screenshot_options, instance._driver)
+        allure_screenshot.take_screenshot("After performing selenium action chain", report_screenshot_options, instance._driver)
 
 
 @fixture(scope="session")
@@ -69,12 +69,12 @@ def report_screenshot_options(request) -> dict:
     }
 
     env_plugin_options: dict = {
-        "screenshot_level": common_utils._get_env_var("REPORT_SCREENSHOT_LEVEL", default_value="all"),
-        "resize_percent": common_utils._get_env_var("REPORT_SCREENSHOT_RESIZE_PERCENT"),
-        "resize_width": common_utils._get_env_var("REPORT_SCREENSHOT_WIDTH"),
-        "resize_height": common_utils._get_env_var("REPORT_SCREENSHOT_HEIGHT"),
-        "screenshot_dir": common_utils._get_env_var("REPORT_SCREENSHOT_DIR", default_value="screenshots/"),
-        "keep_screenshots": common_utils._get_env_var("REPORT_KEEP_SCREENSHOTS", default_value=False)
+        "screenshot_level": common_utils.get_env_var("REPORT_SCREENSHOT_LEVEL", default_value="all"),
+        "resize_percent": common_utils.get_env_var("REPORT_SCREENSHOT_RESIZE_PERCENT"),
+        "resize_width": common_utils.get_env_var("REPORT_SCREENSHOT_WIDTH"),
+        "resize_height": common_utils.get_env_var("REPORT_SCREENSHOT_HEIGHT"),
+        "screenshot_dir": common_utils.get_env_var("REPORT_SCREENSHOT_DIR", default_value="screenshots/"),
+        "keep_screenshots": common_utils.get_env_var("REPORT_KEEP_SCREENSHOTS", default_value=False)
     }
 
     resize_percent = None
@@ -139,7 +139,7 @@ def screen_recorder(report_video_recording_options):
     if 'scenario_name' in report_video_recording_options:
         obj.directory = report_video_recording_options['scenario_name']
 
-    common_utils._mkdir(obj.video_store)
+    common_utils.mkdir(obj.video_store)
     yield obj
 
 
@@ -162,13 +162,13 @@ def report_video_recording_options(request) -> dict:
     }
 
     env_plugin_options: dict = {
-        "video_recording": common_utils._get_env_var("REPORT_VIDEO_RECORDING", default_value=False),
-        "video_dir": common_utils._get_env_var("REPORT_VIDEO_DIR", default_value="videos"),
-        "video_width": common_utils._get_env_var("REPORT_VIDEO_WIDTH"),
-        "video_height": common_utils._get_env_var("REPORT_VIDEO_HEIGHT"),
-        "video_frame_rate": common_utils._get_env_var("REPORT_VIDEO_FRAME_RATE", default_value=5),
-        "video_resize_percentage": common_utils._get_env_var("REPORT_VIDEO_RESIZE_PERCENTAGE", default_value=30),
-        "keep_videos": common_utils._get_env_var("REPORT_KEEP_VIDEOS", default_value=False)
+        "video_recording": common_utils.get_env_var("REPORT_VIDEO_RECORDING", default_value=False),
+        "video_dir": common_utils.get_env_var("REPORT_VIDEO_DIR", default_value="videos"),
+        "video_width": common_utils.get_env_var("REPORT_VIDEO_WIDTH"),
+        "video_height": common_utils.get_env_var("REPORT_VIDEO_HEIGHT"),
+        "video_frame_rate": common_utils.get_env_var("REPORT_VIDEO_FRAME_RATE", default_value=5),
+        "video_resize_percentage": common_utils.get_env_var("REPORT_VIDEO_RESIZE_PERCENTAGE", default_value=30),
+        "keep_videos": common_utils.get_env_var("REPORT_KEEP_VIDEOS", default_value=False)
     }
 
     video_recording = None
@@ -241,12 +241,12 @@ def cleanup(request):
 
         def remove_test_dir(video_options_, screenshot_options_):
             if not video_options_['keep_videos']:
-                common_utils._clean_image_repository(video_options_['video_dir'])
+                common_utils.clean_image_repository(video_options_['video_dir'])
 
             if not screenshot_options_['keep_screenshots']:
-                common_utils._clean_image_repository(screenshot_options_['screenshot_dir'])
+                common_utils.clean_image_repository(screenshot_options_['screenshot_dir'])
             else:
-                common_utils._clean_temp_images(screenshot_options_['screenshot_dir'])
+                common_utils.clean_temp_images(screenshot_options_['screenshot_dir'])
 
         request.addfinalizer(lambda: remove_test_dir(video_options, screenshot_options))
     except Exception as error:
@@ -273,8 +273,8 @@ def pytest_addoption(parser):
     # valid values for screenshot level are 'none', 'all', 'error-only'
     parser.addoption("--report_screenshot_level", action="store", default=None)
 
-    # valid values for video recording are 'true', 'false'
-    parser.addoption("--report_video_recording", action="store", default=0)
+    # valid values for video recording are 'True', 'False'
+    parser.addoption("--report_video_recording", action="store", default=False)
 
     # expected width of video frame to be recorded
     parser.addoption("--report_video_width", action="store", default=0)
@@ -296,10 +296,10 @@ def pytest_addoption(parser):
     parser.addoption("--report_video_dir", action="store", default=0)
 
     # flag is used to decide whether user wants to preserve screenshots
-    parser.addoption("--report_keep_screenshots", action="store", default=0)
+    parser.addoption("--report_keep_screenshots", action="store", default=False)
 
     # flag is used to decide whether user wants to preserve videos
-    parser.addoption("--report_keep_videos", action="store", default=0)
+    parser.addoption("--report_keep_videos", action="store", default=False)
 
 
 def pytest_bdd_before_scenario(request, feature, scenario):
@@ -318,7 +318,7 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
         return
 
     driver = request.getfixturevalue('selenium')
-    allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
+    allure_screenshot.take_screenshot("Step failed", report_screenshot_options, driver)
 
 
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
@@ -328,7 +328,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
         return
 
     driver = request.getfixturevalue('selenium')
-    allure_screenshot._take_screenshot("Step failed", report_screenshot_options, driver)
+    allure_screenshot.take_screenshot("Step failed", report_screenshot_options, driver)
 
 
 def pytest_bdd_after_scenario(request, feature, scenario):
@@ -342,9 +342,9 @@ def pytest_bdd_after_scenario(request, feature, scenario):
 
 def _custom_write_test_case(self, uuid=None):
     """Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
-    inclusion of tests with scenario outlines in allure report. There is no fix available yet so we manually remove the
+    inclusion of tests with scenario outlines in allure report. There is no fix available yet. so we manually remove the
     params which are equals to '_pytest_bdd_example', this param if included in test results, causes errors in report
-    generation hence report doesnt include scenario outlines"""
+    generation hence report doesn't include scenario outlines"""
     test_result = self._pop_item(uuid=uuid, item_type=TestResult)
     if test_result:
         if test_result.parameters:
@@ -373,8 +373,9 @@ def wrapper_for_unexecuted_steps():
         wrapped(*args, **kwargs)  # note it is already bound to the instance
 
         test_result = instance.lifecycle._get_item(uuid=instance.lifecycle._last_item_uuid(item_type=TestResult),
-                                     item_type=TestResult)
+                                                   item_type=TestResult)
         if len(args[0].steps) > len(test_result.steps):
+            # if there are more steps in scenario than in test result, then add the remaining steps to test result
             for i in range(len(test_result.steps), len(args[0].steps)):
                 test_result.steps.append(
                     TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
