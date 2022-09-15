@@ -20,9 +20,9 @@ from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
 from allure_commons.model2 import TestStepResult
-import browser_output_manager
-
-
+import allure
+from allure_commons.types import AttachmentType
+import browser_console_manager
 import common_utils
 
 dotenv.load_dotenv()
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @fixture(scope="session", autouse=True)
-def screenshotting_driver(report_screenshot_options, load_other_configs):
+def screenshotting_driver(report_screenshot_options, other_configs):
     def _enhanced_driver_getter(driver: WebDriver):
         # Event listener is needed only if the screenshot level is greater than 'error-only'
         if report_screenshot_options['screenshot_level'] != 'all':
@@ -39,7 +39,7 @@ def screenshotting_driver(report_screenshot_options, load_other_configs):
 
         # check if the directory to write screenshots exists
         common_utils._mkdir(report_screenshot_options["screenshot_dir"])
-        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, load_other_configs))
+        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, other_configs))
     return _enhanced_driver_getter
 
 
@@ -135,7 +135,7 @@ def report_screenshot_options(request) -> dict:
 
 
 @fixture(scope="session")
-def load_other_configs(request) -> dict:
+def other_configs(request) -> dict:
     return {
         "always_capture_log": True if request.config.getoption("always_capture_log") == 'True' else False,
         "highlight_element": True if request.config.getoption("highlight_element") == 'True' else False
@@ -351,7 +351,8 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     # capture browser's outputs on failure
     capture_log_on_failure = request.config.getoption('capture_log_on_failure')
     if capture_log_on_failure:
-        browser_output_manager.capture_output_and_attach_to_allure(driver)
+        logs = browser_console_manager.capture_output(driver)
+        allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
 
 
 def pytest_bdd_after_scenario(request, feature, scenario):
