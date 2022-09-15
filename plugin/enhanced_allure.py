@@ -20,9 +20,9 @@ from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
 from allure_commons.model2 import TestStepResult
-import browser_output_manager
-
-
+import allure
+from allure_commons.types import AttachmentType
+import browser_console_manager
 import common_utils
 
 dotenv.load_dotenv()
@@ -346,7 +346,8 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     # capture browser's outputs on failure
     capture_log_on_failure = request.config.getoption('capture_log_on_failure')
     if capture_log_on_failure:
-        browser_output_manager.capture_output_and_attach_to_allure(driver)
+        logs = browser_console_manager.capture_output(driver)
+        allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
 
 
 def pytest_bdd_after_scenario(request, feature, scenario):
