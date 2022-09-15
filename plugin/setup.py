@@ -8,7 +8,7 @@ setup(
     author_email='qa@newpage.io',
     license='proprietary',
     py_modules=['enhanced_allure', 'allure_screenshot', 'allure_video_recording', 'common_utils',
-                'browser_output_manager', 'webdriver_event_listener'],
+                'browser_console_manager', 'webdriver_event_listener'],
     install_requires=[
         "selenium >=4.0.0, <4.1.4",
         "pytest >=6.2.5, < 7.0.0",
