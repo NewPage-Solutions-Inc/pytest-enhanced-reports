@@ -12,7 +12,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 import wrapt
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 
-from allure_screenshot import WebDriverEventListener
+from webdriver_event_listener import WebDriverEventListener
 import allure_screenshot
 from allure_video_recording import ScreenRecorder
 
@@ -23,8 +23,6 @@ from allure_commons.model2 import TestStepResult
 import allure
 from allure_commons.types import AttachmentType
 import browser_console_manager
-
-
 import common_utils
 
 dotenv.load_dotenv()
@@ -41,7 +39,7 @@ def screenshotting_driver(report_screenshot_options):
 
         # check if the directory to write screenshots exists
         common_utils._mkdir(report_screenshot_options["screenshot_dir"])
-        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options))
+        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, capture_browser_log_options))
     return _enhanced_driver_getter
 
 
@@ -133,6 +131,13 @@ def report_screenshot_options(request) -> dict:
         "resize_width": resize_width,
         "resize_height": resize_height,
         "keep_screenshots": keep_screenshots
+    }
+
+
+@fixture(scope="session")
+def capture_browser_log_options(request) -> dict:
+    return {
+        "always_capture_log": request.config.getoption("always_capture_log")
     }
 
 
@@ -308,6 +313,9 @@ def pytest_addoption(parser):
     # flag is used to decide whether user wants to capture all console output when test is failed
     parser.addoption("--capture_log_on_failure", action="store", default=0)
 
+    # flag is used to decide whether user wants to capture console output on each action
+    parser.addoption("--always_capture_log", action="store", default=0)
+
 
 def pytest_bdd_before_scenario(request, feature, scenario):
     screenshot_options, video_options = request.getfixturevalue('update_test_name_in_options')
@@ -389,4 +397,3 @@ def wrapper_for_unexecuted_steps():
             for i in range(len(test_result.steps), len(args[0].steps)):
                 test_result.steps.append(
                     TestStepResult(name=f'{args[0].steps[i].keyword} {args[0].steps[i].name}', status='skipped'))
-

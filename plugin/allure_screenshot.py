@@ -10,7 +10,6 @@ from PIL import Image
 from io import BytesIO
 
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 
 import common_utils
 
@@ -18,23 +17,6 @@ dotenv.load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-
-class WebDriverEventListener(AbstractEventListener):
-
-    def __init__(self, plugin_options: dict):
-        self.plugin_options = plugin_options
-
-    def after_navigate_to(self, url, driver: WebDriver):
-        _take_screenshot(f"Navigation to {url}", self.plugin_options, driver)
-
-    def after_click(self, element, driver):
-        _take_screenshot("Click", self.plugin_options, driver)
-
-    def after_change_value_of(self, element, driver):
-        _take_screenshot("Keyboard input", self.plugin_options, driver)
-
-    def after_execute_script(self, script, driver):
-        _take_screenshot("JS execution", self.plugin_options, driver)
 
 
 def fail_silently(func):
