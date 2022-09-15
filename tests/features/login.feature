@@ -21,7 +21,7 @@ Background:
       | Admin    | admin123 |
 
   @login_empty_credentials
-  Scenario: OpenHRM Login with empy username and password
+  Scenario: OpenHRM Login with empty username and password
     When the user clicks on login button
     Then Credentials error for empty field is displayed
 
@@ -50,3 +50,9 @@ Background:
   Scenario: The user is able to click on Forgot password
     When the user clicks on the forgot password link
     Then the "Forgot Your Password?" text is shown on the home page
+
+  @Login_fail_test
+  Scenario: Login with valid username and password to make a fail test
+    When the user enters username "admin"
+    And the user enters password "123"
+    Then Credentials error is displayed

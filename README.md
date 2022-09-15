@@ -120,7 +120,7 @@ pip install <path_to_wheel_file>
 ```
 
 ```bash
-pytest -v -s -q dev/test/step_defs/ \
+pytest -v -s -q test/step_defs/ \
   --report_screenshot_level all \
   --report_screenshot_width 720 \
   --report_screenshot_height 1080 \
@@ -130,7 +130,7 @@ pytest -v -s -q dev/test/step_defs/ \
 ```
 
 ---
-##Important note  
+## Important note  
 Make sure your conftest file has fixture for web driver like below:
 ```python
 @pytest.fixture
@@ -141,3 +141,27 @@ def selenium(selenium, resize_info):
     driver.quit()
 ```
 ---
+
+## Capture browser's output when tests are failing
+This option is to capture browser's outputs when test is failing
+```bash
+pytest --alluredir=reports --driver-path deb/chromedriver --variables capabilities.json --driver Chrome --variables capabilities.json --capture_log_on_failure=True
+```
+
+capabilities.json
+```json
+{
+  "capabilities": {
+    "browser": "Chrome",
+    "goog:loggingPrefs": {
+      "browser": "ALL"
+    }
+  }
+}
+```
+
+---
+--capture_log_on_failure: set this to True if you want to turn it on  
+--log_dir: path to output folder  
+
+
