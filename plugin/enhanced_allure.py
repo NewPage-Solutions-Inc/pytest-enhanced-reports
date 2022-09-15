@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 @fixture(scope="session", autouse=True)
-def screenshotting_driver(report_screenshot_options, load_other_configs):
+def screenshotting_driver(report_screenshot_options, other_configs):
     def _enhanced_driver_getter(driver: WebDriver):
         # Event listener is needed only if the screenshot level is greater than 'error-only'
         if report_screenshot_options['screenshot_level'] != 'all':
@@ -39,7 +39,7 @@ def screenshotting_driver(report_screenshot_options, load_other_configs):
 
         # check if the directory to write screenshots exists
         common_utils._mkdir(report_screenshot_options["screenshot_dir"])
-        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, load_other_configs))
+        return EventFiringWebDriver(driver, WebDriverEventListener(report_screenshot_options, other_configs))
     return _enhanced_driver_getter
 
 
@@ -135,7 +135,7 @@ def report_screenshot_options(request) -> dict:
 
 
 @fixture(scope="session")
-def load_other_configs(request) -> dict:
+def other_configs(request) -> dict:
     return {
         "always_capture_log": True if request.config.getoption("always_capture_log") == 'True' else False,
         "highlight_element": True if request.config.getoption("highlight_element") == 'True' else False
