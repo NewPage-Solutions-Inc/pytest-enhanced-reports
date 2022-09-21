@@ -7,13 +7,11 @@
 
       steps:
       - uses: actions/checkout@v3
-        with:
-          ref: t9-s3-testing
-
-      - name: install dependencies
-        run: |
-          pip install -r requirements.txt && touch a.txt
-
+      
+#      - name: install dependencies
+#        run: |
+#          pip install -r requirements.txt && touch a.txt
+#
 #      - name: download report from s3
 #        uses: keithweaver/aws-s3-github-action@v1.0.0
 #        with:
@@ -26,11 +24,15 @@
 #        run: |
 #          pytest --driver Chrome --alluredir=reports --driver-path deb/chromedriver
 
-      - name: upload report to s3
+      - name: download
         uses: keithweaver/aws-s3-github-action@v1.0.0
         with:
           command: cp
-          source: a.txt
-          destination: s3://np-allure-reports
+          source: s3://np-allure-reports
+          destination: .
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: list
+        run: |
+          ls -lahG
