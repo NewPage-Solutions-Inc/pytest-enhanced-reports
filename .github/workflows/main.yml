@@ -12,7 +12,7 @@
 
       - name: install dependencies
         run: |
-          pip install -r requirements.txt && mkdir -p a/b && cat 'David test' > a/test.txt
+          pip install -r requirements.txt && touch a.txt
 
 #      - name: download report from s3
 #        uses: keithweaver/aws-s3-github-action@v1.0.0
@@ -30,7 +30,7 @@
         uses: keithweaver/aws-s3-github-action@v1.0.0
         with:
           command: cp
-          source: a
+          source: a.txt
           destination: s3://np-allure-reports
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
