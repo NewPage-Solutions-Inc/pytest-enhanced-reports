@@ -1,0 +1,36 @@
+  name: basic workflow testing
+  on:
+    workflow_dispatch:
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+
+      steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: t9-s3-testing
+
+      - name: install dependencies
+        run: |
+          pip install -r requirements.txt && mkdir -p a/b && cat 'David test' > a/test.txt
+
+#      - name: download report from s3
+#        uses: keithweaver/aws-s3-github-action@v1.0.0
+#        with:
+#          command: cp
+#          source: ${{ secrets.AWS_BUCKET }}
+#          destination: a
+#          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#      - name: run tests
+#        run: |
+#          pytest --driver Chrome --alluredir=reports --driver-path deb/chromedriver
+
+      - name: upload report to s3
+        uses: keithweaver/aws-s3-github-action@v1.0.0
+        with:
+          command: cp
+          source: a
+          destination: s3://np-allure-reports
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
