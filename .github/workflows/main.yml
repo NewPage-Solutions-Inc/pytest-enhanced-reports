@@ -1,39 +1,50 @@
-  name: basic workflow testing
-  on:
-    workflow_dispatch:
-  jobs:
-    build:
-      runs-on: ubuntu-latest
+name: basic workflow testing
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-      steps:
-      - uses: actions/checkout@v3
-      
-#      - name: install dependencies
-#        run: |
-#          pip install -r requirements.txt && touch a.txt
-#
-#      - name: download report from s3
-#        uses: keithweaver/aws-s3-github-action@v1.0.0
-#        with:
-#          command: cp
-#          source: ${{ secrets.AWS_BUCKET }}
-#          destination: a
-#          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#      - name: run tests
-#        run: |
-#          pytest --driver Chrome --alluredir=reports --driver-path deb/chromedriver
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: t9s3-testing
 
-      - name: download
-        uses: keithweaver/aws-s3-github-action@v1.0.0
-        with:
-          command: cp
-          source: s3://np-allure-reports/a.png
-          destination: .
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
+    - name: install dependencies
+      run: |
+        pip install -r requirements.txt
 
-      - name: list
-        run: |
-          ls -lahG
+    - name: run tests
+      run: |
+        pytest --alluredir=reports
+
+    - name: download old reports from s3
+      continue-on-error: true
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: ${{ secrets.AWS_BUCKET }}/reports
+        destination: old_reports
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-east-1
+
+    - name: test if old reports were downloaded successfully
+      run: |
+        ls -lahG
+
+#    - name: generate allure reports
+#      run: |
+#        cd reports
+#        cp -r ../old_reports/history allure-report
+#        allure generate reports
+
+    - name: upload report back to S3
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: reports
+        destination: s3://np-allure-reports/${{ github.repository }}/${{ github.run_number }}
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-east-1
