@@ -25,8 +25,8 @@ jobs:
       run: |
         curl -o allure-2.19.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.19.0/allure-2.19.0.tgz
         tar -zxvf allure-2.19.0.tgz -C /opt/
-        chmod +x /opt/allure-2.19.0.tgz/bin/allure
-        /opt/allure-2.19.0.tgz/bin/allure --version
+        chmod +x /opt/allure-2.19.0/bin/allure
+        /opt/allure-2.19.0/bin/allure --version
 
     - name: run tests
       run: |
@@ -52,7 +52,7 @@ jobs:
       run: |
         cd reports
         cp -r ../history . || echo "no history folder found in root!"
-        /opt/allure-2.19.0.tgz/bin/allure generate . --clean
+        /opt/allure-2.19.0/bin/allure generate . --clean
         cp -r allure-report/history ..
         rm -rf history allure-report
 
