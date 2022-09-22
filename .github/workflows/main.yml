@@ -5,6 +5,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+# S3 structure
+# | ${{ github.repository }}
+# |___history: contains historical data for trend + graphs
+# |___reports: latest report
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -23,28 +28,46 @@ jobs:
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: ${{ secrets.AWS_BUCKET }}/reports
-        destination: old_reports
+        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
+        destination: .
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
+        flags: --recursive
 
     - name: test if old reports were downloaded successfully
       run: |
         ls -lahG
 
-#    - name: generate allure reports
-#      run: |
-#        cd reports
-#        cp -r ../old_reports/history allure-report
-#        allure generate reports
+    - name: generate allure reports
+      run: |
+        cd reports
+        cp -r ../history . || echo "no history folder found in root!"
+        allure generate . --clean
+        cp -r allure-report/history ..
+        rm -rf history allure-report
 
-    - name: upload report back to S3
+# todo:
+# 1. remove old files in S3 before uploading new files?
+
+    - name: upload history to S3
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: history
+        destination: s3://np-allure-reports/${{ github.repository }}
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-east-1
+        flags: --recursive
+
+    - name: upload reports to S3
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
         source: reports
-        destination: s3://np-allure-reports/${{ github.repository }}/${{ github.run_number }}
+        destination: s3://np-allure-reports/${{ github.repository }}
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
+        flags: --recursive
