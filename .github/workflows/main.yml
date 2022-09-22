@@ -8,7 +8,9 @@ jobs:
 # S3 structure
 # | ${{ github.repository }}
 # |___history: contains historical data for trend + graphs
-# |___reports: latest report
+# |___1/reports
+# |___2/reports
+# ...
 
     steps:
     - uses: actions/checkout@v3
@@ -20,7 +22,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: install allure
-      run: sudo apt -y install allure
+      run: |
+       apt update && apt -y install allure
 
     - name: run tests
       run: |
@@ -69,7 +72,7 @@ jobs:
       with:
         command: cp
         source: reports
-        destination: s3://np-allure-reports/${{ github.repository }}
+        destination: s3://np-allure-reports/${{ github.repository }}/${{ github.run_number }}
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
