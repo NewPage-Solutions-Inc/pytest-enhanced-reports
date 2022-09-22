@@ -32,13 +32,13 @@ jobs:
       run: |
         pytest --alluredir=reports
 
-    - name: download old reports from s3
+    - name: download old history from s3
       continue-on-error: true
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
         source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
-        destination: .
+        destination: history
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
