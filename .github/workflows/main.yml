@@ -53,6 +53,7 @@ jobs:
         cd reports
         cp -r ../history . || echo "no history folder found in root!"
         /opt/allure-2.19.0/bin/allure generate . --clean
+        rm -rf ../history
         cp -r allure-report/history ..
         rm -rf history allure-report
 
