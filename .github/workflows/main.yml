@@ -23,7 +23,8 @@ jobs:
 
     - name: install allure
       run: |
-       apt update && apt -y install allure
+        sudo apt-get update
+        sudo apt-get -y install allure
 
     - name: run tests
       run: |
