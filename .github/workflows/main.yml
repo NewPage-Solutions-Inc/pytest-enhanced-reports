@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        ref: t9s3-testing
+        ref: t9-s3-testing
 
     - name: install dependencies
       run: |
