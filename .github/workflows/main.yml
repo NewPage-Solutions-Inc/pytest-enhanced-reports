@@ -37,7 +37,7 @@ jobs:
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
+        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/old/history
         destination: history
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -51,9 +51,8 @@ jobs:
     - name: generate allure reports
       run: |
         cd reports
-        cp -r ../history . || echo "no history folder found in root!"
+        cp -r ../old/history . || echo "no history folder found in root!"
         /opt/allure-2.19.0/bin/allure generate . --clean
-        rm -rf ../history
         cp -r allure-report/history ..
         rm -rf history allure-report
 
