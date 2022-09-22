@@ -37,8 +37,8 @@ jobs:
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/old/history
-        destination: history
+        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
+        destination: old/history
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
