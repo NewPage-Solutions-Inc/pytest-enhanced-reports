@@ -32,13 +32,13 @@ jobs:
       run: |
         pytest --alluredir=reports
 
-    - name: download old history from s3
+    - name: download old reports from s3
       continue-on-error: true
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
         source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
-        destination: old/history
+        destination: .
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
@@ -51,10 +51,10 @@ jobs:
     - name: generate allure reports
       run: |
         cd reports
-        cp -r ../old/history . || echo "no history folder found in root!"
+        cp -r ../history . || echo "no history folder found in root!"
         /opt/allure-2.19.0/bin/allure generate . --clean
         cp -r allure-report/history ..
-        rm -rf history allure-report
+        rm -rf history
 
 # todo:
 # 1. remove old files in S3 before uploading new files?
@@ -64,7 +64,7 @@ jobs:
       with:
         command: cp
         source: history
-        destination: s3://np-allure-reports/${{ github.repository }}/history
+        destination: s3://np-allure-reports/${{ github.repository }}
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
