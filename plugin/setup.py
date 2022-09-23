@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='enhanced-allure-report',
-    version='0.2.2',
+    version='1.1.0',
     description='A pytest plugin to take screenshots for allure report',
     author='SDET',
     author_email='qa@newpage.io',

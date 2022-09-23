@@ -12,7 +12,7 @@ class WebDriverEventListener(AbstractEventListener):
         self.other_configs = other_configs
 
     def after_navigate_to(self, url, driver: WebDriver):
-        _take_screenshot(f"Navigation to {url}", self.screen_shot_plugin_options, driver)
+        take_screenshot(f"Navigation to {url}", self.screen_shot_plugin_options, driver)
         if self.other_configs.get('always_capture_log'):
             logs = capture_output(driver)
             allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
@@ -22,7 +22,7 @@ class WebDriverEventListener(AbstractEventListener):
             highlight_element_and_take_a_screenshot(element, "Before click", self.screen_shot_plugin_options, driver)
 
     def after_click(self, element, driver):
-        _take_screenshot("After click", self.screen_shot_plugin_options, driver)
+        take_screenshot("After click", self.screen_shot_plugin_options, driver)
         if self.other_configs.get('always_capture_log'):
             logs = capture_output(driver)
             allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
@@ -33,13 +33,13 @@ class WebDriverEventListener(AbstractEventListener):
                                                     self.screen_shot_plugin_options, driver)
 
     def after_change_value_of(self, element, driver):
-        _take_screenshot("After keyboard input", self.screen_shot_plugin_options, driver)
+        take_screenshot("After keyboard input", self.screen_shot_plugin_options, driver)
         if self.other_configs.get('always_capture_log'):
             logs = capture_output(driver)
             allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
 
     def after_execute_script(self, script, driver):
-        _take_screenshot("JS execution", self.screen_shot_plugin_options, driver)
+        take_screenshot("JS execution", self.screen_shot_plugin_options, driver)
         if self.other_configs.get('always_capture_log'):
             logs = capture_output(driver)
             allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
@@ -48,3 +48,4 @@ class WebDriverEventListener(AbstractEventListener):
         if self.other_configs.get('always_capture_log'):
             logs = capture_output(driver)
             allure.attach(bytes(logs, 'utf-8'), 'Browser Outputs', AttachmentType.TEXT)
+
