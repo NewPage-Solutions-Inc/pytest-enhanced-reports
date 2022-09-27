@@ -5,6 +5,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+# S3 structure
+# | ${{ github.repository }}
+# |___history: contains historical data for trend + graphs
+# |___1/reports
+# |___2/reports
+# ...
+
     steps:
     - uses: actions/checkout@v3
       with:
@@ -13,6 +20,13 @@ jobs:
     - name: install dependencies
       run: |
         pip install -r requirements.txt
+
+    - name: install allure
+      run: |
+        curl -o allure-2.19.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.19.0/allure-2.19.0.tgz
+        tar -zxvf allure-2.19.0.tgz -C /opt/
+        chmod +x /opt/allure-2.19.0/bin/allure
+        /opt/allure-2.19.0/bin/allure --version
 
     - name: run tests
       run: |
@@ -23,23 +37,40 @@ jobs:
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
-        source: ${{ secrets.AWS_BUCKET }}/reports
-        destination: old_reports
+        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
+        destination: .
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
+        flags: --recursive
 
     - name: test if old reports were downloaded successfully
       run: |
         ls -lahG
 
-#    - name: generate allure reports
-#      run: |
-#        cd reports
-#        cp -r ../old_reports/history allure-report
-#        allure generate reports
+    - name: generate allure reports
+      run: |
+        cd reports
+        cp -r ../history . || echo "no history folder found in root!"
+        /opt/allure-2.19.0/bin/allure generate . --clean
+        cp -r allure-report/history ..
+        rm -rf history
 
-    - name: upload report back to S3
+# todo:
+# 1. remove old files in S3 before uploading new files?
+
+    - name: upload history to S3
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: history
+        destination: s3://np-allure-reports/${{ github.repository }}/history
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-east-1
+        flags: --recursive
+
+    - name: upload reports to S3
       uses: keithweaver/aws-s3-github-action@v1.0.0
       with:
         command: cp
@@ -48,3 +79,4 @@ jobs:
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: us-east-1
+        flags: --recursive
