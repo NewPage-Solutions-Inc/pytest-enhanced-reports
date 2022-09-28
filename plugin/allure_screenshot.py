@@ -21,24 +21,6 @@ dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-class WebDriverEventListener(AbstractEventListener):
-
-    def __init__(self, plugin_options: dict):
-        self.plugin_options = plugin_options
-
-    def after_navigate_to(self, url, driver: WebDriver):
-        take_screenshot(f"Navigation to {url}", self.plugin_options, driver)
-
-    def after_click(self, element, driver):
-        take_screenshot("Click", self.plugin_options, driver)
-
-    def after_change_value_of(self, element, driver):
-        take_screenshot("Keyboard input", self.plugin_options, driver)
-
-    def after_execute_script(self, script, driver):
-        take_screenshot("JS execution", self.plugin_options, driver)
-
-
 @common_utils.fail_silently
 def take_screenshot(screenshot_name: str, plugin_options, driver: WebDriver):
     # selenium can't take screenshots if a browser alert/prompt is open. trying to do so would break the current test.
