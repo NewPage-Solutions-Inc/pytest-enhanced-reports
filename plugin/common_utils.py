@@ -41,13 +41,13 @@ def _clean_temp_images(img_dir, file_name=None):
     if file_name is None:
         if os.path.isdir(img_dir):
             for f in os.listdir(img_dir):
-                if f.__contains__('png'):
+                if f.__contains__("png"):
                     os.remove(os.path.join(img_dir, f))
             logger.info(f"Temporary images cleaned from {img_dir}")
     else:
         os.remove(os.path.join(img_dir, file_name))
 
 
-def _clean_filename(sourcestring,  removestring ="%:/,\\[]<>*?"):
+def _clean_filename(sourcestring, removestring="%:/,\\[]<>*?"):
     # remove the undesirable characters
-    return ''.join([c for c in sourcestring if c not in removestring])
+    return "".join([c for c in sourcestring if c not in removestring])
