@@ -170,3 +170,20 @@ use this flag to always capture logs after an event is executed
 pytest --driver Chrome --alluredir=reports --driver-path deb/chromedriver --variables capabilities.json --always_capture_log=True
 ```
 --always_capture_log=True: capture browser's outputs after an action is executed
+
+
+
+## Code Quality
+Before committing your code, please format your code with Black and check everything is good with flake8.   
+Basically, new changes will be checked automatically in the "pre-commit" to make sure we have a clean code
+
+Black
+```bash
+black --check .
+black **/*.py
+```
+
+Flake8
+```bash
+Flake8
+```
