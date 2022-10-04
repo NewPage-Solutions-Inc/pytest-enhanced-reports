@@ -16,9 +16,9 @@ class UserPage:
         admin_tab = self.driver.find_element(*ADMIN_TAB)
         user_management_tab = self.driver.find_element(*USER_MANAGEMENT_TAB)
         user_button = self.driver.find_element(*USERS_MENU)
-        action.move_to_element(admin_tab).move_to_element(
-            user_management_tab
-        ).click(user_button).perform()
+        action.move_to_element(admin_tab).move_to_element(user_management_tab).click(
+            user_button
+        ).perform()
 
     def input_search_field(self):
         search_field = self.driver.find_element(*SEARCH_FIELD)

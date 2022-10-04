@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 class ScreenRecorder:
     def __init__(self):
         self.stop = False
-        self.directory = "temp/"  # This directory will be used to save the frames temporarily
-        self.video_store = (
-            "videos"  # This will be used to save the recorded video
+        self.directory = (
+            "temp/"  # This directory will be used to save the frames temporarily
         )
+        self.video_store = "videos"  # This will be used to save the recorded video
 
     def start_capturing(self, driver_):
         """This method will start capturing images and saving them on disk under /video folder
@@ -29,20 +29,14 @@ class ScreenRecorder:
                 os.mkdir(self.directory)
                 logging.info("Creating new directory: " + self.directory)
             while True:
-                driver_.save_screenshot(
-                    self.directory + "/" + str(count) + ".png"
-                )
+                driver_.save_screenshot(self.directory + "/" + str(count) + ".png")
                 count += 1
                 if self.stop:
                     logging.info("Stopping Screen Capture")
                     break
-            logger.info(
-                "SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count)
-            )
+            logger.info("SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count))
         except Exception as error:
-            logger.error(
-                "An Exception occurred while taking screenshot. " + str(error)
-            )
+            logger.error("An Exception occurred while taking screenshot. " + str(error))
 
     def create_video_from_images(
         self, scenario_info, location, video_size: tuple, frame_rate: int
@@ -50,15 +44,9 @@ class ScreenRecorder:
         """This method will stitch the images under /video directory into a video"""
         fourcc = cv2.VideoWriter_fourcc(*"vp09")
         video_name = f"{location}/{scenario_info}.webm"
-        video = cv2.VideoWriter(
-            video_name, fourcc, int(frame_rate), video_size
-        )
-        images_path = [
-            f for f in os.listdir(self.directory) if f.endswith(".png")
-        ]
-        images_path = sorted(
-            images_path, key=lambda x: int(os.path.splitext(x)[0])
-        )
+        video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
+        images_path = [f for f in os.listdir(self.directory) if f.endswith(".png")]
+        images_path = sorted(images_path, key=lambda x: int(os.path.splitext(x)[0]))
         for img in images_path:
             if img.__contains__("png"):
                 video.write(
@@ -108,12 +96,10 @@ class ScreenRecorder:
                 )
 
         except Exception as error:
-            logger.error(
-                "An Exception occurred while stitching video. " + str(error)
-            )
+            logger.error("An Exception occurred while stitching video. " + str(error))
         finally:
             # Now clean the images directory
-            common_utils._clean_image_repository(self.directory)
+            common_utils.clean_image_repository(self.directory)
 
     def get_video_resize_resolution(self, info):
         try:
@@ -132,11 +118,7 @@ class ScreenRecorder:
                     img = Image.open(
                         os.path.join(
                             directory,
-                            [
-                                f
-                                for f in os.listdir(directory)
-                                if f.endswith(".png")
-                            ][0],
+                            [f for f in os.listdir(directory) if f.endswith(".png")][0],
                         )
                     )
                     desired_resolution = common_utils._get_resized_resolution(
@@ -149,7 +131,7 @@ class ScreenRecorder:
                 + str(error)
             )
             # Now clean the images in temp directory as video stitching has failed
-            common_utils._clean_image_repository(self.directory)
+            common_utils.clean_image_repository(self.directory)
 
     def get_original_resolution(self, directory):
         # get the original resolution of any screenshot from the screenshot repository

@@ -10,7 +10,6 @@ from PIL import Image
 from io import BytesIO
 
 from selenium.webdriver.remote.webdriver import WebDriver
-
 import common_utils
 
 dotenv.load_dotenv()
@@ -42,9 +41,7 @@ def _take_screenshot(screenshot_name: str, plugin_options, driver: WebDriver):
     )
 
 
-def _get_resized_image(
-    image_bytes, options: dict, screenshot_name="screenshot.png"
-):
+def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.png"):
     desired_resolution = None
     screenshot_file_name = f"{screenshot_name} {str(datetime.now())}.png"
     screenshot_file_name = common_utils._clean_filename(screenshot_file_name)
@@ -67,9 +64,7 @@ def _get_resized_image(
 
     # Check if user wants to keep the screenshots, if yes then create directory and save original images
     if options["keep_screenshots"]:
-        common_utils._mkdir(
-            f"{options['screenshot_dir']}/{options['scenario_name']}"
-        )
+        common_utils._mkdir(f"{options['screenshot_dir']}/{options['scenario_name']}")
         path: str = f"{options['screenshot_dir']}/{options['scenario_name']}/{screenshot_file_name}"
         img.save(path)
 
@@ -103,8 +98,6 @@ def highlight_element_and_take_a_screenshot(
         )
 
     original_style = element.get_attribute("style")
-    apply_style(
-        "border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5)
-    )
+    apply_style("border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5))
     _take_screenshot(action_name, screen_shot_plugin_options, driver)
     apply_style(original_style)
