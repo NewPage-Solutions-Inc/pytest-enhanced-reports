@@ -1,5 +1,7 @@
-
+import allure
+from allure_screenshot import fail_silently
 from selenium.webdriver.remote.webdriver import WebDriver
+from allure_commons.types import AttachmentType
 from datetime import datetime
 
 

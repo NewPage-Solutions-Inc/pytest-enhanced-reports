@@ -72,7 +72,7 @@ class ScreenRecorder:
             logger.error("An Exception occurred while stitching video. " + str(error))
         finally:
             # Now clean the images directory
-            common_utils.clean_image_repository(self.directory)
+            common_utils._clean_image_repository(self.directory)
 
     def get_video_resize_resolution(self, info):
         try:
@@ -87,12 +87,12 @@ class ScreenRecorder:
                     resize_factor = int(info['video_resize_percentage']) / 100
                     img = Image.open(
                         os.path.join(directory, [f for f in os.listdir(directory) if f.endswith('.png')][0]))
-                    desired_resolution = common_utils.get_resized_resolution(img.width, img.height, resize_factor)
+                    desired_resolution = common_utils._get_resized_resolution(img.width, img.height, resize_factor)
             return desired_resolution
         except Exception as error:
             logger.error("An Exception occurred while fetching video resize resolution. " + str(error))
             # Now clean the images in temp directory as video stitching has failed
-            common_utils.clean_image_repository(self.directory)
+            common_utils._clean_image_repository(self.directory)
 
     def get_original_resolution(self, directory):
         # get the original resolution of any screenshot from the screenshot repository
