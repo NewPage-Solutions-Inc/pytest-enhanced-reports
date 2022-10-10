@@ -9,7 +9,6 @@ LOGOUT_BUTTON = By.XPATH, '//a[@href="/index.php/auth/logout"]'
 
 
 class HomePage:
-
     def __init__(self, driver):
         self.driver = driver
 
