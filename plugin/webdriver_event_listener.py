@@ -1,6 +1,6 @@
 from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
 from selenium.webdriver.remote.webdriver import WebDriver
-from allure_screenshot import take_screenshot, highlight_element_and_take_a_screenshot
+from screenshot_manager import take_screenshot, highlight_element_and_take_a_screenshot
 from browser_console_manager import capture_output
 import allure
 from allure_commons.types import AttachmentType

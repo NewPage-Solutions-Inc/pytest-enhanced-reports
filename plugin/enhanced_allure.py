@@ -13,8 +13,8 @@ import wrapt
 from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
 
 from webdriver_event_listener import WebDriverEventListener
-import allure_screenshot
-from allure_video_recording import ScreenRecorder
+import screenshot_manager
+from video_manager import ScreenRecorder
 
 from allure_commons.lifecycle import AllureLifecycle
 from allure_commons.model2 import TestResult
@@ -59,7 +59,7 @@ def create_wrappers(report_screenshot_options):
 
         wrapped(*args, **kwargs)  # note it is already bound to the instance
 
-        allure_screenshot.take_screenshot(
+        screenshot_manager.take_screenshot(
             "After performing selenium action chain",
             report_screenshot_options,
             instance._driver,
@@ -391,7 +391,7 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
         return
 
     driver = request.getfixturevalue("selenium")
-    allure_screenshot.take_screenshot("Step failed", report_screenshot_options, driver)
+    screenshot_manager.take_screenshot("Step failed", report_screenshot_options, driver)
 
 
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
@@ -399,7 +399,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
 
     report_screenshot_options = request.getfixturevalue("report_screenshot_options")
     if report_screenshot_options["screenshot_level"] != "none":
-        allure_screenshot.take_screenshot(
+        screenshot_manager.take_screenshot(
             "Step failed", report_screenshot_options, driver
         )
 

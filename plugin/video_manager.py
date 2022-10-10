@@ -4,6 +4,7 @@ import dotenv
 import allure
 from allure_commons.types import AttachmentType
 from PIL import Image
+from common_utils import get_original_resolution
 import cv2
 import common_utils
 
@@ -20,7 +21,7 @@ class ScreenRecorder:
         )
         self.video_store = "videos"  # This will be used to save the recorded video
 
-    def start_capturing(self, driver_):
+    def start_capturing(self, driver):
         """This method will start capturing images and saving them on disk under /video folder
         These images will later be used to stich together into a video"""
         try:
@@ -29,7 +30,7 @@ class ScreenRecorder:
                 os.mkdir(self.directory)
                 logging.info("Creating new directory: " + self.directory)
             while True:
-                driver_.save_screenshot(self.directory + "/" + str(count) + ".png")
+                driver.save_screenshot(self.directory + "/" + str(count) + ".png")
                 count += 1
                 if self.stop:
                     logging.info("Stopping Screen Capture")
@@ -84,7 +85,7 @@ class ScreenRecorder:
             )
 
             if video_info["keep_videos"]:
-                original_size = self.get_original_resolution(self.directory)
+                original_size = get_original_resolution(self.directory)
                 self.create_video_from_images(
                     scenario_info,
                     self.video_store,
@@ -129,12 +130,3 @@ class ScreenRecorder:
             )
             # Now clean the images in temp directory as video stitching has failed
             common_utils.clean_image_repository(self.directory)
-
-    def get_original_resolution(self, directory):
-        # get the original resolution of any screenshot from the screenshot repository
-        img = Image.open(
-            os.path.join(
-                directory, [f for f in os.listdir(directory) if f.endswith(".png")][0]
-            )
-        )
-        return img.width, img.height
