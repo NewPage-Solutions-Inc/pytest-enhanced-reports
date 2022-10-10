@@ -11,6 +11,7 @@ setup(
         "browser_console_manager",
         "common_utils",
         "enhanced_allure",
+        "parameters_manager",
         "screenshot_manager",
         "video_manager",
         "webdriver_event_listener",
