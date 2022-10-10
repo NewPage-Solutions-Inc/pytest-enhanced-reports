@@ -4,13 +4,13 @@ from tests.pages.login_page import LoginPage
 from tests.pages.home_page import HomePage
 from selenium.webdriver.common.by import By
 
-scenarios('../features/homepage.feature')
+scenarios("../features/homepage.feature")
 
 # Locators
 ROW_VALUE = By.XPATH, '//a[@href="saveSystemUser?userId=1"]'
 
 
-@given('The user logs in to OpenHRM')
+@given("The user logs in to OpenHRM")
 def user_login(selenium):
     LoginPage(selenium).navigate_to_url()
     LoginPage(selenium).set_username(properties.VALID_USER)
@@ -49,6 +49,6 @@ def click_logout(selenium):
     HomePage(selenium).click_logout()
 
 
-@then('the home page is displayed')
+@then("the home page is displayed")
 def login_page_display(selenium):
-    assert selenium.find_element_by_id('txtUsername').is_displayed()
+    assert selenium.find_element_by_id("txtUsername").is_displayed()

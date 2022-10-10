@@ -1,6 +1,6 @@
 from selenium.webdriver.common.by import By
 
-SITE_URL = 'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
+SITE_URL = "https://opensource-demo.orangehrmlive.com/web/index.php/auth/login"
 
 # Locators
 
@@ -11,7 +11,6 @@ FORGOT_PWD_LINK = By.XPATH, "//p[text()='Forgot your password? ']"
 
 
 class LoginPage:
-
     def __init__(self, driver):
         self.driver = driver
 

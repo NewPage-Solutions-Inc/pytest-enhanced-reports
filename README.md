@@ -178,8 +178,8 @@ Basically, new changes will be checked automatically in the "pre-commit" to make
 
 Black
 ```bash
-black --check .
-black **/*.py
+black . --check --exclude=venv 
+black . --exclude=venv
 ```
 
 Flake8
