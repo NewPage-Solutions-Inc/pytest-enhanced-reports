@@ -1,41 +1,17 @@
 import logging
 import dotenv
 from datetime import datetime
-
 import allure
 from allure_commons.types import AttachmentType
-
 import base64
 from PIL import Image
 from io import BytesIO
-
 from selenium.webdriver.remote.webdriver import WebDriver
-
 from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
-
 import common_utils
 
 dotenv.load_dotenv()
-
 logger = logging.getLogger(__name__)
-
-
-class WebDriverEventListener(AbstractEventListener):
-    def __init__(self, plugin_options: dict):
-        self.plugin_options = plugin_options
-
-    def after_navigate_to(self, url, driver: WebDriver):
-        take_screenshot(f"Navigation to {url}", self.plugin_options, driver)
-
-    def after_click(self, element, driver):
-        take_screenshot("Click", self.plugin_options, driver)
-
-    def after_change_value_of(self, element, driver):
-        take_screenshot("Keyboard input", self.plugin_options, driver)
-
-    def after_execute_script(self, script, driver):
-        take_screenshot("JS execution", self.plugin_options, driver)
 
 
 @common_utils.fail_silently
@@ -95,6 +71,7 @@ def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.p
     return path
 
 
+@common_utils.fail_silently
 def highlight_element_and_take_a_screenshot(
     element,
     action_name,

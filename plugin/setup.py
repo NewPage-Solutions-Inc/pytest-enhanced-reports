@@ -8,11 +8,12 @@ setup(
     author_email="qa@newpage.io",
     license="proprietary",
     py_modules=[
-        "enhanced_allure",
-        "allure_screenshot",
-        "allure_video_recording",
-        "common_utils",
         "browser_console_manager",
+        "common_utils",
+        "enhanced_allure",
+        "parameters_manager",
+        "screenshot_manager",
+        "video_manager",
         "webdriver_event_listener",
     ],
     install_requires=[

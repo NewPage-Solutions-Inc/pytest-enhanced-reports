@@ -1,11 +1,10 @@
 import logging
 import os
+from typing import Tuple
+from PIL import Image
 import dotenv
 
-from typing import Tuple
-
 dotenv.load_dotenv()
-
 logger = logging.getLogger(__name__)
 
 
@@ -63,3 +62,16 @@ def fail_silently(func):
             logger.error(f"Error in {func.__name__}: {e}")
 
     return wrapped_func
+
+
+def get_original_resolution(directory, file_name=None):
+    """get the original resolution of an image"""
+    if not file_name:
+        img = Image.open(
+            os.path.join(
+                directory, [f for f in os.listdir(directory) if f.endswith(".png")][0]
+            )
+        )
+    else:
+        img = Image.open(os.path.join(directory, file_name))
+    return img.width, img.height
