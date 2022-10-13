@@ -45,6 +45,6 @@ def click_user_management(selenium):
 
 
 @then("the user is able to see system users")
-def verify_search_button(selenium):
+def verify_system_users_appear(selenium):
     pytest.skip("skipped for testing purposes")
     logger.info("the user is able to see system users")

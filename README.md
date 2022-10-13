@@ -178,11 +178,11 @@ Basically, new changes will be checked automatically in the "pre-commit" to make
 
 Black
 ```bash
-black . --check --exclude=venv 
-black . --exclude=venv
+black . --check
+black .
 ```
 
 Flake8
 ```bash
-Flake8
+flake8
 ```
