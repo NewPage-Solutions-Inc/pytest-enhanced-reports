@@ -96,9 +96,9 @@ def init(parser_or_group: Union[argparsing.Parser, argparsing.OptionGroup]):
     for arg_name, arg_details in __args.items():
         parser_or_group.addoption(
             f"--{__default_prefix}{arg_name}",
-            action=arg_details.get("action", default=__default_action),
-            default=arg_details.get("default_value", default=None),
-            help=arg_details.get("doc", default="No docstring for this argument"),
+            action=arg_details.get("action", __default_action),
+            default=arg_details.get("default_value", None),
+            help=arg_details.get("doc", "No docstring for this argument"),
         )
 
 
