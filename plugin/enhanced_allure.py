@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 @fixture(scope="session", autouse=True)
-def screenshotting_driver(report_screenshot_options, other_configs):
+def screenshotting_driver(report_screenshot_options, other_configs):  # noqa: F811
     def _enhanced_driver_getter(driver: WebDriver):
         # Event listener is needed only if the screenshot level is greater than 'error-only'
         if report_screenshot_options["screenshot_level"] != "all":
@@ -52,7 +52,7 @@ def screenshotting_driver(report_screenshot_options, other_configs):
 
 
 @fixture(scope="session", autouse=True)
-def create_wrappers(report_screenshot_options):
+def create_wrappers(report_screenshot_options):  # noqa: F811
     if report_screenshot_options["screenshot_level"] != "all":
         return
 
@@ -72,7 +72,7 @@ def create_wrappers(report_screenshot_options):
 
 
 @pytest.fixture
-def screen_recorder(report_video_recording_options):
+def screen_recorder(report_video_recording_options):  # noqa: F811
     obj = ScreenRecorder()
     obj.video_store = report_video_recording_options["video_dir"]
     if "scenario_name" in report_video_recording_options:
@@ -92,7 +92,7 @@ def video_capture_thread(screen_recorder, selenium):
 
 @pytest.fixture
 def update_test_name_in_options(
-    report_screenshot_options, report_video_recording_options, request
+    report_screenshot_options, report_video_recording_options, request  # noqa: F811
 ):
     if report_screenshot_options["screenshot_level"] != "none":
         report_screenshot_options["scenario_name"] = request.node.nodeid.split("/")[
@@ -148,7 +148,9 @@ def pytest_bdd_before_scenario(request, feature, scenario):
 
 
 def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
-    report_screenshot_options = request.getfixturevalue("report_screenshot_options")
+    report_screenshot_options = request.getfixturevalue(  # noqa: F811
+        "report_screenshot_options"
+    )
 
     if report_screenshot_options["screenshot_level"] == "none":
         return
@@ -160,7 +162,9 @@ def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func
 def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     driver = request.getfixturevalue("selenium")
 
-    report_screenshot_options = request.getfixturevalue("report_screenshot_options")
+    report_screenshot_options = request.getfixturevalue(  # noqa: F811
+        "report_screenshot_options"
+    )
     if report_screenshot_options["screenshot_level"] != "none":
         screenshot_manager.take_screenshot(
             "Step failed", report_screenshot_options, driver
@@ -175,7 +179,6 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
 
 def pytest_bdd_after_scenario(request, feature, scenario):
     video_options = request.getfixturevalue("report_video_recording_options")
-    screenshot_options = request.getfixturevalue("report_screenshot_options")
     if video_options["video_recording"]:
         scenario_info = video_options["scenario_name"]
         obj_recorder_thread, obj_recorder = request.getfixturevalue(

@@ -184,5 +184,5 @@ black . --exclude=venv
 
 Flake8
 ```bash
-Flake8
+flake8
 ```

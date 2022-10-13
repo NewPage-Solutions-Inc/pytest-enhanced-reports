@@ -19,6 +19,3 @@ class UserPage:
         action.move_to_element(admin_tab).move_to_element(user_management_tab).click(
             user_button
         ).perform()
-
-    def input_search_field(self):
-        search_field = self.driver.find_element(*SEARCH_FIELD)

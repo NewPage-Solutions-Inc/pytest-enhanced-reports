@@ -47,14 +47,14 @@ def click_login(selenium):
 
 @allure.severity(allure.severity_level.MINOR)
 @then("Home page is displayed")
-def home_page(selenium):
+def verify_home_page_displayed(selenium):
     assert selenium.find_element(*ADMIN_TAB).is_displayed()
     logger.info("Login Test Passed")
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then("Credentials error is displayed")
-def home_page(selenium):
+def verify_error_display(selenium):
     actual_message = selenium.find_element(*LOGIN_MESSAGE).text
     assert actual_message == properties.INVALID_CRED_MESSAGE
     logger.info("Credentials Test Passed")
@@ -62,7 +62,7 @@ def home_page(selenium):
 
 @allure.severity(allure.severity_level.MINOR)
 @then("Credentials error for empty field is displayed")
-def home_page(selenium):
+def verify_error_display_for_empty_field(selenium):
     actual_messages = selenium.find_elements(*LOGIN_FIELD_MESSAGE)
     assert len(actual_messages) > 0
     logger.info("Empty Credentials Test Passed")
@@ -70,13 +70,13 @@ def home_page(selenium):
 
 @allure.severity(allure.severity_level.MINOR)
 @when("the user clicks on the forgot password link")
-def forgot_password_page(selenium):
+def verify_forgot_password_link(selenium):
     LoginPage(selenium).click_forgot_password()
     logger.info("Forgot password link")
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then('the "Forgot Your Password?" text is shown on the home page')
-def forgot_password_page(selenium):
+def verify_forgot_password_page(selenium):
     assert "Forgot" == "Forgot"
     logger.info("Forgot password link Test Passed")
