@@ -14,7 +14,9 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 
 import wrapt
-from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
+from selenium.webdriver.support.event_firing_webdriver import (
+    EventFiringWebDriver,
+)
 
 from webdriver_event_listener import WebDriverEventListener
 import screenshot_manager
@@ -36,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 @fixture(scope="session", autouse=True)
-def screenshotting_driver(report_options, other_configs):
+def screenshotting_driver(report_options):
     def _enhanced_driver_getter(driver: WebDriver):
         # Event listener is needed only if the screenshot level is greater than 'error-only'
         if report_options.get("screenshot_level") != "all":
@@ -45,7 +47,7 @@ def screenshotting_driver(report_options, other_configs):
         # check if the directory to write screenshots exists
         common_utils.mkdir(report_options.get("screenshot_dir"))
         return EventFiringWebDriver(
-            driver, WebDriverEventListener(report_options, other_configs)
+            driver, WebDriverEventListener(report_options)
         )
 
     return _enhanced_driver_getter
@@ -71,6 +73,7 @@ def create_wrappers(report_options):
         )
 
 
+@fixture(scope="session")
 def report_options(request: FixtureRequest) -> dict[str, Any]:
     return options.get_all_values(request)
 
@@ -109,7 +112,9 @@ def cleanup(request: FixtureRequest):
                 common_utils.clean_image_repository(report_options["video_dir"])
 
             if not report_options["keep_screenshots"]:
-                common_utils.clean_image_repository(report_options["screenshot_dir"])
+                common_utils.clean_image_repository(
+                    report_options["screenshot_dir"]
+                )
             else:
                 common_utils.clean_temp_images(report_options["screenshot_dir"])
 
@@ -140,7 +145,9 @@ def pytest_bdd_before_scenario(
         obj_recorder_thread.start()
 
 
-def pytest_bdd_step_validation_error(request, feature, scenario, step, step_func):
+def pytest_bdd_step_validation_error(
+    request, feature, scenario, step, step_func
+):
     report_options = request.getfixturevalue("report_options")
 
     if report_options["screenshot_level"] == "none":
@@ -155,13 +162,17 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
 
     report_options = request.getfixturevalue("report_options")
     if report_options["screenshot_level"] != "none":
-        screenshot_manager.take_screenshot("Step failed", report_options, driver)
+        screenshot_manager.take_screenshot(
+            "Step failed", report_options, driver
+        )
 
     # capture browser's outputs on failure
     capture_log_on_failure = request.config.getoption("capture_log_on_failure")
     if capture_log_on_failure:
         logs = browser_console_manager.capture_output(driver)
-        allure.attach(bytes(logs, "utf-8"), "Browser Outputs", AttachmentType.TEXT)
+        allure.attach(
+            bytes(logs, "utf-8"), "Browser Outputs", AttachmentType.TEXT
+        )
 
 
 def pytest_bdd_after_scenario(request, feature, scenario):

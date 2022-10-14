@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 class ScreenRecorder:
     def __init__(self):
         self.stop = False
-        self.directory = (
-            "temp/"  # This directory will be used to save the frames temporarily
+        self.directory = "temp/"  # This directory will be used to save the frames temporarily
+        self.video_store = (
+            "videos"  # This will be used to save the recorded video
         )
-        self.video_store = "videos"  # This will be used to save the recorded video
 
     def start_capturing(self, driver):
         """This method will start capturing images and saving them on disk under /video folder
@@ -30,14 +30,20 @@ class ScreenRecorder:
                 os.mkdir(self.directory)
                 logging.info("Creating new directory: " + self.directory)
             while True:
-                driver.save_screenshot(self.directory + "/" + str(count) + ".png")
+                driver.save_screenshot(
+                    self.directory + "/" + str(count) + ".png"
+                )
                 count += 1
                 if self.stop:
                     logging.info("Stopping Screen Capture")
                     break
-            logger.info("SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count))
+            logger.info(
+                "SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count)
+            )
         except Exception as error:
-            logger.error("An Exception occurred while taking screenshot. " + str(error))
+            logger.error(
+                "An Exception occurred while taking screenshot. " + str(error)
+            )
 
     def create_video_from_images(
         self, scenario_info, location, video_size: tuple, frame_rate: int
@@ -46,13 +52,18 @@ class ScreenRecorder:
         fourcc = cv2.VideoWriter_fourcc(*"vp09")
         video_name = f"{location}/{scenario_info}.webm"
         video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
-        images_path = [f for f in os.listdir(self.directory) if f.endswith(".png")]
-        images_path = sorted(images_path, key=lambda x: int(os.path.splitext(x)[0]))
+        images_path = [
+            f for f in os.listdir(self.directory) if f.endswith(".png")
+        ]
+        images_path = sorted(
+            images_path, key=lambda x: int(os.path.splitext(x)[0])
+        )
         for img in images_path:
             if img.__contains__("png"):
                 video.write(
                     cv2.resize(
-                        cv2.imread(os.path.join(self.directory, img)), video_size
+                        cv2.imread(os.path.join(self.directory, img)),
+                        video_size,
                     )
                 )
         video.release()
@@ -81,7 +92,9 @@ class ScreenRecorder:
                 video_info["video_frame_rate"],
             )
             allure.attach.file(
-                file_name, name=attachment_name, attachment_type=AttachmentType.WEBM
+                file_name,
+                name=attachment_name,
+                attachment_type=AttachmentType.WEBM,
             )
 
             if video_info["keep_videos"]:
@@ -94,7 +107,9 @@ class ScreenRecorder:
                 )
 
         except Exception as error:
-            logger.error("An Exception occurred while stitching video. " + str(error))
+            logger.error(
+                "An Exception occurred while stitching video. " + str(error)
+            )
         finally:
             # Now clean the images directory
             common_utils.clean_image_repository(self.directory)
@@ -116,7 +131,11 @@ class ScreenRecorder:
                     img = Image.open(
                         os.path.join(
                             directory,
-                            [f for f in os.listdir(directory) if f.endswith(".png")][0],
+                            [
+                                f
+                                for f in os.listdir(directory)
+                                if f.endswith(".png")
+                            ][0],
                         )
                     )
                     desired_resolution = common_utils.get_resized_resolution(

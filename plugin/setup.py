@@ -30,6 +30,7 @@ setup(
         "black",
         "flake8-noqa",
     ],
+    # data_files=[("data", ["parameters.json"])],
     entry_points={"pytest11": ["enhanced_allure_report = enhanced_allure"]},
     classifiers=["Framework :: Pytest"],
 )
