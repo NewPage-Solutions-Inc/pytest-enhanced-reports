@@ -1,0 +1,62 @@
+{
+    "capture_browser_console_log": {
+        "default_value": "on_failure",
+        "doc": "Specifies when to capture info from the browser console log. Valid values are 'on_failure', 'always' and 'never'. Default is 'on_failure'"
+    },
+    "screenshot_level": {
+        "default_value": "all",
+        "doc": "Specifies when to capture screenshots. Valid values are 'none', 'all', 'error-only'. Default is 'all'"
+    },
+    "screenshot_resize_percent": {
+        "default_value": 40,
+        "doc": "A percentage by which the screenshot will be resized. valid values - such as 50, 60, 75"
+    },
+    "screenshot_height": {
+        "default_value": 0,
+        "doc": "The expected height of the resized screenshot used in reports. Actual value could be different as it needs to fit the aspect ratio"
+    },
+    "screenshot_width": {
+        "default_value": 0,
+        "doc": "The expected width of the resized screenshot used in reports. Actual value could be different as it needs to fit the aspect ratio"
+    },
+    "highlight_element": {
+        "default_value": false,
+        "doc": "If set to True, the element being interacted with will be highlighted before taking the screenshot. Default is False"
+    },
+    "keep_screenshots": {
+        "default_value": false,
+        "doc": "If set to True, generated screenshot images will not be deleted after the test run. Defaults to False"
+    },
+    "screenshot_dir": {
+        "default_value": "reports",
+        "doc": "The path to the directory where screenshots will be stored"
+    },
+    "video_recording": {
+        "default_value": false,
+        "doc": "If set to True, a video will be recorded for each test. Default is False"
+    },
+    "keep_videos": {
+        "default_value": false,
+        "doc": "If set to True, generated video files will not be deleted after the test run. Defaults to False"
+    },
+    "video_dir": {
+        "default_value": "reports",
+        "doc": "The path to the directory where video files will be stored"
+    },
+    "video_resize_percentage": {
+        "default_value": 75,
+        "doc": "A percentage by which the video frames will be resized. valid values - such as 50, 60, 75"
+    },
+    "video_frame_rate": {
+        "default_value": 30,
+        "doc": "The expected number of frames per second while recording a video. This is applicable only when there enough frames were recorded in one second, which is not guaranteed."
+    },
+    "video_height": {
+        "default_value": 0,
+        "doc": "Expected height of the video. Actual value could be different as it needs to fit the aspect ratio"
+    },
+    "video_width": {
+        "default_value": 0,
+        "doc": "Expected width of the video. Actual value could be different as it needs to fit the aspect ratio"
+    }
+}

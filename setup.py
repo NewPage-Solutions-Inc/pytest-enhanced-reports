@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 NAME = "enhanced-allure-report"
-VERSION = "1.1.1"
+VERSION = "1.1.0"
 
 # To install the library, run the following
 #
@@ -46,9 +46,9 @@ setup(
     ],
     install_requires=INSTALL_REQUIRES,
     packages=find_packages(where=NAME),
-    package_dir={"": NAME},
-    package_data={"data": ["*.json"]},
-    # data_files=[('data', ["*.json"])],
+    package_dir={"": NAME, "data": f"{NAME}/data"},
+    package_data={"": ["*.json"]},
+    # data_files=[('', ["*.json"])],
     include_package_data=True,
     entry_points={"pytest11": ["enhanced_allure_report = enhanced_allure"]},
     classifiers=["Framework :: Pytest"],
