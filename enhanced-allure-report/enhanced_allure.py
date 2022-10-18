@@ -30,7 +30,7 @@ import allure
 from allure_commons.types import AttachmentType
 import browser_console_manager
 import common_utils
-import options
+import parameters
 
 dotenv.load_dotenv()
 
@@ -75,7 +75,7 @@ def create_wrappers(report_options):
 
 @fixture(scope="session")
 def report_options(request: FixtureRequest) -> dict[str, Any]:
-    return options.get_all_values(request)
+    return parameters.get_all_values(request)
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ def update_test_results_for_scenario_outline():
 
 def pytest_addoption(parser: argparsing.Parser):
     group = parser.getgroup("enhanced-report")
-    options.init(group)
+    parameters.init(group)
 
 
 def pytest_bdd_before_scenario(

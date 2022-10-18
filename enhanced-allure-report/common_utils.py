@@ -53,7 +53,7 @@ def clean_filename(sourcestring, removestring="%:/,\\[]<>*?"):
 
 
 def fail_silently(func):
-    """Decorator that makes sure that any errors/exceptions do not get outside the plugin"""
+    """Decorator that makes sure that any errors/exceptions do not get outside the enhanced-allure-report"""
 
     def wrapped_func(*args, **kws):
         try:
