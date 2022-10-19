@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 NAME = "enhanced-allure-report"
-VERSION = "1.1.1"
+VERSION = "1.1.0"
 
 # To install the library, run the following
 #
@@ -47,6 +47,4 @@ setup(
     install_requires=INSTALL_REQUIRES,
     entry_points={"pytest11": ["enhanced_allure_report = enhanced_allure"]},
     classifiers=["Framework :: Pytest"],
-    # formatting tools
-    setup_requires=["flake8", "black"],
 )
