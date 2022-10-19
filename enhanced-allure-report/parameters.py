@@ -5,7 +5,6 @@ from _pytest.config import argparsing
 from _pytest.fixtures import FixtureRequest
 
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ __args: Mapping[str, Mapping[str, Any]] = {
         "doc": "If set to True, generated screenshot images will not be deleted after the test run. Defaults to False",
     },
     "screenshot_dir": {
-        "default_value": None,
+        "default_value": "reports/screenshots",
         "doc": "The path to the directory where screenshots will be stored",
     },
     "video_recording": {
@@ -61,7 +60,7 @@ __args: Mapping[str, Mapping[str, Any]] = {
         "doc": "If set to True, generated video files will not be deleted after the test run. Defaults to False",
     },
     "video_dir": {
-        "default_value": None,
+        "default_value": "reports/videos",
         "doc": "The path to the directory where video files will be stored",
     },
     "video_resize_percentage": {

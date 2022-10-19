@@ -108,7 +108,12 @@ def cleanup(request: FixtureRequest):
         report_options = request.getfixturevalue("report_options")
 
         def remove_test_dir():
+            logging.info(report_options["video_dir"])
+            print(report_options["video_dir"])
+            print(report_options["keep_videos"])
             if not report_options["keep_videos"]:
+                logging.info(report_options["video_dir"])
+                print(report_options["video_dir"])
                 common_utils.clean_image_repository(report_options["video_dir"])
 
             if not report_options["keep_screenshots"]:
@@ -167,8 +172,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
         )
 
     # capture browser's outputs on failure
-    capture_log_on_failure = request.config.getoption("capture_log_on_failure")
-    if capture_log_on_failure:
+    if report_options["capture_browser_console_log"] == "on_failure":
         logs = browser_console_manager.capture_output(driver)
         allure.attach(
             bytes(logs, "utf-8"), "Browser Outputs", AttachmentType.TEXT
