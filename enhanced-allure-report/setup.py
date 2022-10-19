@@ -21,9 +21,6 @@ INSTALL_REQUIRES = [
     "Pillow >=8.4.0, <9.0.0",
     "wrapt >=1.14.1, <2.0.0",
     "opencv-python",
-    "pre-commit",
-    "black",
-    "flake8-noqa",
 ]
 
 setup(
