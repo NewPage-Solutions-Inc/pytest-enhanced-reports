@@ -15,9 +15,6 @@ __default_prefix = "report_"
 
 __arg_values: Mapping[str, Any] = {}
 
-# with open("data/parameters.json", "r") as f:
-#     __args: Mapping[str, Mapping[str, Any]] = json.load(f)
-
 __args: Mapping[str, Mapping[str, Any]] = {
     "capture_browser_console_log": {
         "default_value": "on_failure",

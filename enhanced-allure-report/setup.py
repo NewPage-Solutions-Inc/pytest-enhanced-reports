@@ -45,11 +45,6 @@ setup(
         "webdriver_event_listener",
     ],
     install_requires=INSTALL_REQUIRES,
-    packages=find_packages(where=NAME),
-    package_dir={"": NAME},
-    package_data={"data": ["*.json"]},
-    # data_files=[('data', ["*.json"])],
-    include_package_data=True,
     entry_points={"pytest11": ["enhanced_allure_report = enhanced_allure"]},
     classifiers=["Framework :: Pytest"],
     # formatting tools
