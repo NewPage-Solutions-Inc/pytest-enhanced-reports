@@ -69,7 +69,8 @@ def get_original_resolution(directory, file_name=None):
     if not file_name:
         img = Image.open(
             os.path.join(
-                directory, [f for f in os.listdir(directory) if f.endswith(".png")][0]
+                directory,
+                [f for f in os.listdir(directory) if f.endswith(".png")][0],
             )
         )
     else:

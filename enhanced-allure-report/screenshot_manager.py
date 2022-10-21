@@ -24,11 +24,15 @@ def take_screenshot(screenshot_name: str, plugin_options, driver: WebDriver):
         driver.get_screenshot_as_base64(), plugin_options, screenshot_name
     )
     allure.attach.file(
-        path_to_resized_image, name=screenshot_name, attachment_type=AttachmentType.PNG
+        path_to_resized_image,
+        name=screenshot_name,
+        attachment_type=AttachmentType.PNG,
     )
 
 
-def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.png"):
+def _get_resized_image(
+    image_bytes, options: dict, screenshot_name="screenshot.png"
+):
     desired_resolution = None
     screenshot_file_name = f"{screenshot_name} {str(datetime.now())}.png"
     screenshot_file_name = common_utils.clean_filename(screenshot_file_name)
@@ -51,7 +55,9 @@ def _get_resized_image(image_bytes, options: dict, screenshot_name="screenshot.p
 
     # Check if user wants to keep the screenshots, if yes then create directory and save original images
     if options["keep_screenshots"]:
-        common_utils.mkdir(f"{options['screenshot_dir']}/{options['scenario_name']}")
+        common_utils.mkdir(
+            f"{options['screenshot_dir']}/{options['scenario_name']}"
+        )
         path: str = f"{options['screenshot_dir']}/{options['scenario_name']}/{screenshot_file_name}"
         img.save(path)
 
@@ -86,6 +92,8 @@ def highlight_element_and_take_a_screenshot(
         )
 
     original_style = element.get_attribute("style")
-    apply_style("border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5))
+    apply_style(
+        "border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5)
+    )
     take_screenshot(action_name, screen_shot_plugin_options, driver)
     apply_style(original_style)
