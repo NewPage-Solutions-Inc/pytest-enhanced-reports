@@ -8,4 +8,4 @@ pre-commit
 black
 flake8-noqa
 
-./plugin
+./enhanced-allure-report

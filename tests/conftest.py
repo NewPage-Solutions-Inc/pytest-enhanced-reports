@@ -9,8 +9,6 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def selenium(selenium, screenshotting_driver):
-    selenium.maximize_window()
-    selenium.implicitly_wait(10)
     enhanced_driver = None
     try:
         enhanced_driver = screenshotting_driver(selenium)
