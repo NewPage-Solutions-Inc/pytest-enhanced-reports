@@ -2,77 +2,106 @@ import logging
 
 import allure
 from pytest_bdd import scenarios, given, when, then, parsers
-from tests.pages.first_page import FirstPage
-from tests.pages.second_page import SecondPage
+from selenium.webdriver.common.by import By
 
 logger = logging.getLogger(__name__)
+
 scenarios("../features/first_page.feature")
+
+SITE_URL = "https://newpage-solutions-inc.github.io/allure-screenshots/test-site/index.html"
+
+# Locators
+FIRST_NAME = By.ID, "firstName"
+LAST_NAME = By.ID, "lastName"
+EMAIL = By.ID, "email"
+PHONE = By.ID, "phone"
+SUBMIT = By.ID, "submit"
+MESSAGE = By.ID, "message"
+LINK_TO_PAGE_2 = By.ID, "link_to_page_2"
+LINK_TO_PAGE_1 = By.ID, "back_to_page1"
 
 
 @given("Start Website")
 def open_url(selenium):
-    FirstPage(selenium).navigate_to_url()
-    FirstPage(selenium).check_first_page_display()
+    selenium.get(SITE_URL)
+    check_first_page_displayed(selenium)
 
 
 @when(parsers.parse("User enters first name {first_name}"))
 def enter_first_name(selenium, first_name):
-    FirstPage(selenium).set_first_name(first_name)
+    first_name_field = selenium.find_element(*FIRST_NAME)
+    first_name_field.send_keys(first_name)
     logger.info("first_name is entered")
 
 
 @when(parsers.parse("User enters last name {last_name}"))
 def enter_last_name(selenium, last_name):
-    FirstPage(selenium).set_last_name(last_name)
+    last_name_field = selenium.find_element(*LAST_NAME)
+    last_name_field.send_keys(last_name)
     logger.info("last_name is entered")
 
 
 @when(parsers.parse("User enters email {email}"))
 def enter_email(selenium, email):
-    FirstPage(selenium).set_email(email)
+    email_field = selenium.find_element(*EMAIL)
+    email_field.send_keys(email)
     logger.info("email is entered")
 
 
 @when(parsers.parse("User enters phone {phone}"))
 def enter_phone(selenium, phone):
-    FirstPage(selenium).set_phone(phone)
+    phone_field = selenium.find_element(*PHONE)
+    phone_field.send_keys(phone)
     logger.info("last_name is entered")
 
 
 @when("User clicks on submit button")
 def click_login(selenium):
     with allure.step("Submit Click"):
-        FirstPage(selenium).click_submit()
+        selenium.find_element(*SUBMIT).click()
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then("User can see welcome message for new user")
 def verify_message_new_user(selenium):
-    FirstPage(selenium).check_message_content("Welcome new user!")
+    check_message_content(selenium, "Welcome new user!")
 
 
 @allure.severity(allure.severity_level.MINOR)
 @then("User can see welcome message for existing user")
 def verify_message_existing_user(selenium):
-    FirstPage(selenium).check_message_content("Welcome back!")
+    check_message_content(selenium, "Welcome back!")
 
 
 @when("User clicks on go to page 2 button")
 def click_go_to_page2(selenium):
     with allure.step("Go To Page 2 Click"):
-        FirstPage(selenium).click_link_to_page_2()
+        selenium.find_element(*LINK_TO_PAGE_2).click()
 
 
 @then("User can see page 2")
 def verify_page_2(selenium):
-    SecondPage(selenium).check_current_page()
+    check_second_page_displayed(selenium)
 
 
 @when("User clicks on go to page 1 button")
 def click_go_to_page1(selenium):
-    SecondPage(selenium).click_link_to_page_1()
+    selenium.find_element(*LINK_TO_PAGE_1).click()
 
 
 @then("User can see page 1")
 def verify_page_1(selenium):
-    FirstPage(selenium).check_first_page_display()
+    check_first_page_displayed(selenium)
+
+
+def check_first_page_displayed(driver):
+    assert len(driver.find_elements(*FIRST_NAME)) == 1
+
+
+def check_second_page_displayed(driver):
+    assert len(driver.find_elements(*LINK_TO_PAGE_1)) == 1
+
+
+def check_message_content(driver, content):
+    message = driver.find_element(*MESSAGE)
+    assert message.text == content, "message are different"
