@@ -34,9 +34,8 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for new user
 
-    @navigate_to_page2
-    Scenario: Navigate to page 2 and navigate back
-      When User clicks on go to page 2 button
-      Then User can see page 2
-      When User clicks on go to page 1 button
-      Then User can see page 1
+  @run_test_js_logs
+  Scenario: Navigate to page 2 and navigate back
+    When User clicks on go to page 2 button
+    Then User can see page 2
+
