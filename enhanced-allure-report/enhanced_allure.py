@@ -40,16 +40,15 @@ logger = logging.getLogger(__name__)
 @fixture(scope="session", autouse=True)
 def screenshotting_driver(report_options):
     def _enhanced_driver_getter(driver: WebDriver):
-        # Event listener is needed only if the screenshot level is greater than 'error-only'
-        if report_options.get("screenshot_level") != "all":
+        if report_options['screenshot_level'] == 'none':
             return driver
 
         # check if the directory to write screenshots exists
-        common_utils.mkdir(report_options.get("screenshot_dir"))
-        return EventFiringWebDriver(
-            driver, WebDriverEventListener(report_options)
-        )
+        common_utils.mkdir(report_options["screenshot_dir"])
 
+        # Event listener is needed only if the screenshot level is greater than 'error-only'
+        if report_options['screenshot_level'] == 'all':
+            return EventFiringWebDriver(driver, WebDriverEventListener(report_options))
     return _enhanced_driver_getter
 
 
