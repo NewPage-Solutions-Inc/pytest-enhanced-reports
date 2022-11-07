@@ -1,6 +1,5 @@
 name: basic workflow testing
-on:
-  workflow_dispatch:
+on: [pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,12 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        ref: t9-s3-testing
 
     - name: install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r tests/requirements.txt
 
     - name: install allure
       run: |
@@ -30,7 +27,7 @@ jobs:
 
     - name: run tests
       run: |
-        pytest --alluredir=reports
+        tests/run.sh
 
     - name: download old reports from s3
       continue-on-error: true

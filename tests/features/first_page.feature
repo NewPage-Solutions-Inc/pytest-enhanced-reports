@@ -1,6 +1,6 @@
 Feature: Test First Page
   Background:
-    Given Start Website
+    Given I open first page
 
   @existing_user
   Scenario: Existing user submit
@@ -34,8 +34,5 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for new user
 
-  @run_test_js_logs
-  Scenario: Navigate to page 2 and navigate back
-    When User clicks on go to page 2 button
-    Then User can see page 2
-
+  Scenario: Run Test for browser's outputs
+    When I click go to page 2
