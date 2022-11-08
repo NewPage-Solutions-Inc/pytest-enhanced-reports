@@ -4,13 +4,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-# S3 structure
-# | ${{ github.repository }}
-# |___history: contains historical data for trend + graphs
-# |___1/reports
-# |___2/reports
-# ...
-
     steps:
     - uses: actions/checkout@v3
 
@@ -19,10 +12,10 @@ jobs:
         pip install -r tests/requirements.txt
     - name: install python 3.9
       run: |
-        apt update
-        apt install software-properties-common
-        add-apt-repository ppa:deadsnakes/ppa
-        apt install python3.9
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt install python3.9
         python -V
         python3.9 -V
 
