@@ -9,22 +9,7 @@ jobs:
 
     - name: install dependencies
       run: |
-        pip install -r tests/requirements.txt
-    - name: install python 3.9
-      run: |
-        sudo apt update
-        sudo apt install software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa
-        sudo apt install python3.9
-        python -V
-        python3.9 -V
-
-    - name: install allure
-      run: |
-        curl -o allure-2.19.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.19.0/allure-2.19.0.tgz
-        tar -zxvf allure-2.19.0.tgz -C /opt/
-        chmod +x /opt/allure-2.19.0/bin/allure
-        /opt/allure-2.19.0/bin/allure --version
+        python3.9 -m pip install -r tests/requirements.txt
 
     - name: run tests
       run: |
