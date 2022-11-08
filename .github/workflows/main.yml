@@ -7,6 +7,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: install python3.9
+      run: |
+        sudo apt update
+        sudo apt install software-properties-common
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt install python3.9
+
     - name: install dependencies
       run: |
         python3.9 -m pip install -r tests/requirements.txt
