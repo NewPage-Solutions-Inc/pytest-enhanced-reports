@@ -18,8 +18,8 @@ jobs:
         sudo apt install unzip
         unzip chromedriver_linux64.zip
         mkdir deb
-        cp chromedriver dev/
-        chmod +x dev/chromedriver
+        cp chromedriver deb/
+        chmod +x deb/chromedriver
 
 
     - name: install python3.9
