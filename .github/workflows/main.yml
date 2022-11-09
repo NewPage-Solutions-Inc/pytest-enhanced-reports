@@ -17,7 +17,7 @@ jobs:
 
     - run: |
         ls -l /usr/local/share/chrome_driver/chromedriver
-        chmod 755 $CHROMEDRIVER
+        chmod 755 /usr/local/share/chrome_driver/chromedriver
         ls -l /usr/local/share/chrome_driver/chromedriver
         ls -l $CHROMEDRIVER
 
