@@ -7,28 +7,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: install Google Chrome
-      run: |
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo apt install ./google-chrome-stable_current_amd64.deb
-
-    - name: install Google Chrome driver
-      run: |
-        wget -q https://chromedriver.storage.googleapis.com/$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip
-        sudo apt install unzip
-        unzip chromedriver_linux64.zip
-        mkdir deb
-        cp chromedriver deb/
-        chmod +x deb/chromedriver
-
-
-    - name: install python3.9
-      run: |
-        sudo apt update
-        sudo apt install software-properties-common
-        sudo add-apt-repository ppa:deadsnakes/ppa
-        sudo apt install python3.9
-
     - name: install dependencies
       run: |
         python3.9 -m pip install -r tests/requirements.txt

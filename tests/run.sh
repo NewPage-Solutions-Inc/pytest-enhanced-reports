@@ -1,6 +1,6 @@
 echo '{"capabilities": {"headless": true, "browser": "Chrome","goog:loggingPrefs": {"browser": "ALL"}}}' > capabilities-js-test.json
 python3.9 -m pytest --driver Chrome \
-  --driver-path deb/chromedriver \
+  --driver-path $CHROMEWEBDRIVER \
   --alluredir=reports \
   --headless=true \
   --variables capabilities-js-test.json \
