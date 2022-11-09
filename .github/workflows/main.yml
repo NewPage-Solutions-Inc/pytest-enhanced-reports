@@ -16,7 +16,6 @@ jobs:
         pip install -r tests/requirements.txt
 
     - run: |
-        export CHROMEDRIVER=$CHROMEDRIVER/chromedriver
         ls -l /usr/local/share/chrome_driver/chromedriver
         chmod 755 $CHROMEDRIVER
         ls -l /usr/local/share/chrome_driver/chromedriver
@@ -24,5 +23,5 @@ jobs:
 
     - name: run tests
       run: |
-    
+        export CHROMEDRIVER=/usr/local/share/chrome_driver/chromedriver
         tests/run.sh
