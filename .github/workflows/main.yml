@@ -7,15 +7,23 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
     - name: install dependencies
       run: |
-        python -V
-        python3.9 -V
         python3.9 -m pip install -r tests/requirements.txt
+
+    - name: test variables
+      run: |
+        echo $CHROMEWEBDRIVER
+        python -V
+        python --version
+        python3.9 -V
+        python3.9 --version
+        which python
+        which python3.9
 
     - name: run tests
       run: |
