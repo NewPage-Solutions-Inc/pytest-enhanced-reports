@@ -13,18 +13,11 @@ jobs:
 
     - name: install dependencies
       run: |
-        python3.9 -m pip install -r tests/requirements.txt
+        pip install -r tests/requirements.txt
 
-    - name: test variables
-      run: |
-        echo $CHROMEWEBDRIVER
-        python -V
-        python --version
-        python3.9 -V
-        python3.9 --version
-        which python
-        which python3.9
+    - run: google-chrome --version
 
     - name: run tests
       run: |
+        export CHROMEDRIVER=/usr/local/share/chrome_driver
         tests/run.sh
