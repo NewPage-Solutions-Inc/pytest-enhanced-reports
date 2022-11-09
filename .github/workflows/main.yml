@@ -15,9 +15,13 @@ jobs:
       run: |
         pip install -r tests/requirements.txt
 
-    - run: google-chrome --version
+    - run: |
+        ls -l /usr/local/share/chrome_driver
+        export CHROMEDRIVER=/usr/local/share/chrome_driver
+        cp /usr/local/share/chrome_driver /usr/local/share/chromedriver
+        ls -l /usr/local/share/chromedriver
+        chmod +x /usr/local/share/chromedriver
 
     - name: run tests
       run: |
-        export CHROMEDRIVER=/usr/local/share/chrome_driver
         tests/run.sh
