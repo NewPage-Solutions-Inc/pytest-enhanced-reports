@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--headless", action="store", default="false", help="run test headless"
+        "--headless", action="store", default="true", help="run test headless"
     )
 
 
