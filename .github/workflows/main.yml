@@ -15,15 +15,6 @@ jobs:
       run: |
         pip install -r tests/requirements.txt
 
-    - run: |
-        ls -l /usr/local/share/chrome_driver
-        sudo chown -R $(whoami) /usr/local/share/chrome_driver
-        ls -l /usr/local/share/chrome_driver
-        sudo chmod 755 /usr/local/share/chrome_driver
-        ls -l /usr/local/share/chrome_driver
-        export CHROMEDRIVER=/usr/local/share/chrome_driver
-        ls -l $CHROMEDRIVER
-
     - name: run tests
       run: |
         tests/run.sh
