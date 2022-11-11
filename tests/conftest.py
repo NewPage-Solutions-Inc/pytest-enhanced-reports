@@ -1,5 +1,5 @@
 # This module contains shared fixtures, steps, and hooks.
-from tests.util.common_actions import *
+from tests.step_defs.shared_steps import *
 import pytest
 import logging
 
