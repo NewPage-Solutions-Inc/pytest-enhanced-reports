@@ -1,7 +1,7 @@
 from pytest_bdd import scenario
 import json
 import pytest
-import util
+from tests.util import util
 from os import getcwd
 
 
