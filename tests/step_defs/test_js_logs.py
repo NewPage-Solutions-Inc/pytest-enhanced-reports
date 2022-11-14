@@ -5,7 +5,7 @@ from tests.util import util
 from os import getcwd
 
 
-@scenario("../features/first_page.feature", "Run Test for browser's outputs")
+@scenario("../features/first_page.feature", "Test for browser's outputs")
 def test_run_js_logs(selenium):
     pass
 

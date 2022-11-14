@@ -20,8 +20,7 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for new user
 
-  @multiple_focus
-  Scenario: Focus many times on text fields + submit
+  Scenario: Tests for generated files
     When User enters first name Test
     And User enters last name ABC
     And User enters email test@test.com
@@ -34,5 +33,5 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for new user
 
-  Scenario: Run Test for browser's outputs
+  Scenario: Test for browser's outputs
     When I click go to page 2
