@@ -17,12 +17,14 @@ jobs:
 
     - name: test
       run: |
-        echo $CHROMEWEBDRIVER
+        export CHROMEWEBDRIVER=$CHROMEWEBDRIVER/chromedriver
         ls -l $CHROMEWEBDRIVER
-        cp $CHROMEWEBDRIVER /usr/bin
-        export CHROMEWEBDRIVER=/usr/bin/chromedriver
-        ls -l $CHROMEWEBDRIVER
-        ls -l /usr/bin/chromedriver
+#        echo $CHROMEWEBDRIVER
+#        ls -l $CHROMEWEBDRIVER
+#        cp $CHROMEWEBDRIVER /usr/bin
+#        export CHROMEWEBDRIVER=/usr/bin/chromedriver
+#        ls -l $CHROMEWEBDRIVER
+#        ls -l /usr/bin/chromedriver
 
     - name: run tests
       run: |
