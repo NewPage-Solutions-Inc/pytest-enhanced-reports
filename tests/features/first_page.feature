@@ -1,6 +1,6 @@
 Feature: Test First Page
   Background:
-    Given Start Website
+    Given I open first page
 
   @existing_user
   Scenario: Existing user submit
@@ -34,9 +34,5 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for new user
 
-    @navigate_to_page2
-    Scenario: Navigate to page 2 and navigate back
-      When User clicks on go to page 2 button
-      Then User can see page 2
-      When User clicks on go to page 1 button
-      Then User can see page 1
+  Scenario: Run Test for browser's outputs
+    When I click go to page 2

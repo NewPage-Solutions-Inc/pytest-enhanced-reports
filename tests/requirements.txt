@@ -7,5 +7,6 @@ allure-pytest-bdd == 2.9.45
 pre-commit
 black
 flake8-noqa
+pytest-order
 
 ./enhanced-allure-report
