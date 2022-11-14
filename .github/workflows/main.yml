@@ -15,6 +15,11 @@ jobs:
       run: |
         pip install -r tests/requirements.txt
 
+    - name: test
+      run: |
+        echo $CHROMEWEBDRIVER
+        ls -l $CHROMEWEBDRIVER
+
     - name: run tests
       run: |
         tests/run.sh
