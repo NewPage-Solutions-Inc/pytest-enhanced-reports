@@ -1,0 +1,7 @@
+selenium
+pytest
+pytest-bdd
+pytest-selenium
+allure-pytest-bdd
+
+../enhanced-allure-report/

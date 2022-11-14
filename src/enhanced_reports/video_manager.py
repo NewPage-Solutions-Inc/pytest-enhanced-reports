@@ -1,12 +1,16 @@
 import logging
 import os
+from typing import Dict, Any, Tuple
+
 import dotenv
 import allure
 from allure_commons.types import AttachmentType
 from PIL import Image
-from common_utils import get_original_resolution
 import cv2
-import common_utils
+
+from . import common_utils
+from .common_utils import get_original_resolution
+from .config import Parameter
 
 dotenv.load_dotenv()
 
@@ -14,24 +18,24 @@ logger = logging.getLogger(__name__)
 
 
 class ScreenRecorder:
-    def __init__(self):
+    def __init__(self, directory: str = "temp/", video_store: str = "videos"):
         self.stop = False
-        self.directory = "temp/"  # This directory will be used to save the frames temporarily
-        self.video_store = (
-            "videos"  # This will be used to save the recorded video
-        )
+        self.__directory = directory  # This directory will be used to save the frames temporarily
+        self.__video_store = video_store  # This will be used to save the recorded video
+        self.__desired_resolution: Tuple[int, int] = None
+        self.__resize_factor: float = None
 
     def start_capturing(self, driver):
         """This method will start capturing images and saving them on disk under /video folder
         These images will later be used to stich together into a video"""
         try:
             count = 0
-            if not os.path.isdir(self.directory):
-                os.mkdir(self.directory)
-                logging.info("Creating new directory: " + self.directory)
+            if not os.path.isdir(self.__directory):
+                os.mkdir(self.__directory)
+                logging.info("Creating new directory: " + self.__directory)
             while True:
                 driver.save_screenshot(
-                    self.directory + "/" + str(count) + ".png"
+                    self.__directory + "/" + str(count) + ".png"
                 )
                 count += 1
                 if self.stop:
@@ -53,7 +57,7 @@ class ScreenRecorder:
         video_name = f"{location}/{scenario_info}.webm"
         video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
         images_path = [
-            f for f in os.listdir(self.directory) if f.endswith(".png")
+            f for f in os.listdir(self.__directory) if f.endswith(".png")
         ]
         images_path = sorted(
             images_path, key=lambda x: int(os.path.splitext(x)[0])
@@ -62,7 +66,7 @@ class ScreenRecorder:
             if img.__contains__("png"):
                 video.write(
                     cv2.resize(
-                        cv2.imread(os.path.join(self.directory, img)),
+                        cv2.imread(os.path.join(self.__directory, img)),
                         video_size,
                     )
                 )
@@ -79,17 +83,17 @@ class ScreenRecorder:
         return video_name
 
     def stop_recording_and_stitch_video(
-        self, video_info, recorder_thread, scenario_info, attachment_name
+        self, report_options: Dict[Parameter, Any], recorder_thread, scenario_info, attachment_name
     ):
         try:
             self.stop = True
             recorder_thread.join()
-            video_resize_info = self.get_video_resize_resolution(video_info)
+            video_resize_info = self.get_video_resize_resolution(report_options)
             file_name = self.create_video_from_images(
                 scenario_info,
-                self.directory,
+                self.__directory,
                 video_resize_info,
-                video_info["video_frame_rate"],
+                report_options[Parameter.VIDEO_FRAME_RATE],
             )
             allure.attach.file(
                 file_name,
@@ -97,13 +101,13 @@ class ScreenRecorder:
                 attachment_type=AttachmentType.WEBM,
             )
 
-            if video_info["keep_videos"]:
-                original_size = get_original_resolution(self.directory)
+            if report_options[Parameter.VIDEO_KEEP_FILES]:
+                original_size = get_original_resolution(self.__directory)
                 self.create_video_from_images(
                     scenario_info,
-                    self.video_store,
+                    self.__video_store,
                     original_size,
-                    video_info["video_frame_rate"],
+                    report_options[Parameter.VIDEO_FRAME_RATE],
                 )
 
         except Exception as error:
@@ -112,35 +116,30 @@ class ScreenRecorder:
             )
         finally:
             # Now clean the images directory
-            common_utils.clean_image_repository(self.directory)
+            common_utils.delete_dir(self.__directory)
 
-    def get_video_resize_resolution(self, info):
+    def get_video_resize_resolution(self, report_options: Dict[Parameter, Any]):
         try:
-            desired_resolution = None
-            directory = self.directory
-            if info:
-                if info["video_width"] and info["video_height"]:
-                    # if a resolution is provided, use that
-                    desired_resolution = (
-                        int(info["video_width"]),
-                        int(info["video_height"]),
+            directory = self.__directory
+            desired_resolution = self.__desired_resolution if self.__desired_resolution \
+                else (report_options[Parameter.VIDEO_WIDTH], report_options[Parameter.VIDEO_HEIGHT])
+            resize_factor = self.__resize_factor if self.__resize_factor \
+                else report_options[Parameter.VIDEO_RESIZE_PERCENT] / 100
+
+            if desired_resolution == (0, 0):
+                # use the resize factor to calculate the desired resolution from actual resolution of the image
+                img = Image.open(
+                    os.path.join(
+                        directory,
+                        [
+                            f
+                            for f in os.listdir(directory)
+                            if f.endswith(".png")
+                        ][0],
                     )
-                elif info["video_resize_percentage"]:
-                    # if a percentage is provided, set the resize factor from default to user provided value
-                    resize_factor = int(info["video_resize_percentage"]) / 100
-                    img = Image.open(
-                        os.path.join(
-                            directory,
-                            [
-                                f
-                                for f in os.listdir(directory)
-                                if f.endswith(".png")
-                            ][0],
-                        )
-                    )
-                    desired_resolution = common_utils.get_resized_resolution(
-                        img.width, img.height, resize_factor
-                    )
+                )
+                desired_resolution = common_utils.get_resized_resolution(img.width, img.height, resize_factor)
+
             return desired_resolution
         except Exception as error:
             logger.error(
@@ -148,4 +147,4 @@ class ScreenRecorder:
                 + str(error)
             )
             # Now clean the images in temp directory as video stitching has failed
-            common_utils.clean_image_repository(self.directory)
+            common_utils.delete_dir(self.__directory)

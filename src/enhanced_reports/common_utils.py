@@ -2,14 +2,8 @@ import logging
 import os
 from typing import Tuple
 from PIL import Image
-import dotenv
 
-dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
-
-
-def get_env_var(env_var_name, default_value=None):
-    return os.getenv(env_var_name, default_value)
 
 
 def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
@@ -20,22 +14,21 @@ def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
 
 def mkdir(dir_name):
     if not os.path.isdir(dir_name):
-        os.mkdir(dir_name)
+        os.makedirs(dir_name)
 
 
-def clean_image_repository(img_dir):
-    # Now clean the images directory
-    if os.path.isdir(img_dir):
-        for f in os.listdir(img_dir):
-            if os.path.isdir(os.path.join(img_dir, f)):
-                clean_image_repository(os.path.join(img_dir, f))
+def delete_dir(dir_path):
+    if os.path.isdir(dir_path):
+        for f in os.listdir(dir_path):
+            if os.path.isdir(os.path.join(dir_path, f)):
+                delete_dir(os.path.join(dir_path, f))
             else:
-                os.remove(os.path.join(img_dir, f))
-        os.rmdir(img_dir)
-        logger.info(f"IMAGE REPOSOTORY CLEANED. {img_dir} FOLDER DELETED.")
+                os.remove(os.path.join(dir_path, f))
+        os.rmdir(dir_path)
+        logger.info(f"Deleted the dir '{dir_path}'")
 
 
-def clean_temp_images(img_dir, file_name=None):
+def clean_temp_images(img_dir, file_name=None):  # TODO: Test if this removes only the temp images. Doesn't look like it
     # Now clean the images directory or a single file if specified
     if file_name is None:
         if os.path.isdir(img_dir):
@@ -47,9 +40,11 @@ def clean_temp_images(img_dir, file_name=None):
         os.remove(os.path.join(img_dir, file_name))
 
 
-def clean_filename(sourcestring, removestring="%:/,\\[]<>*?"):
+def clean_filename(value: str) -> str:
     # remove the undesirable characters
-    return "".join([c for c in sourcestring if c not in removestring])
+    import re
+    regex: str = r"\b\d*[^\W\d_][^\W_]*\b"  # From https://stackoverflow.com/a/58835448/5376299
+    return re.sub(regex, "", value, 0, re.MULTILINE)
 
 
 def fail_silently(func):
