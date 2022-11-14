@@ -17,10 +17,11 @@ jobs:
 
     - name: test
       run: |
-        export CHROMEWEBDRIVER=$CHROMEWEBDRIVER/chromedriver
-        ls -l $CHROMEWEBDRIVER
-        sudo cp -r $CHROMEWEBDRIVER /usr/bin
+#        export CHROMEWEBDRIVER=$CHROMEWEBDRIVER/chromedriver
+#        ls -l $CHROMEWEBDRIVER
+#        sudo cp -r $CHROMEWEBDRIVER /usr/bin
         export CHROMEWEBDRIVER=/usr/bin/chromedriver
+        ls -l $CHROMEWEBDRIVER
 #        echo $CHROMEWEBDRIVER
 #        ls -l $CHROMEWEBDRIVER
 #        cp $CHROMEWEBDRIVER /usr/bin
