@@ -1,7 +1,15 @@
-# This module contains shared fixtures, steps, and hooks.
-from tests.step_defs.shared_steps import *
+
 import pytest
 import logging
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+
+
+logging.basicConfig(filename='reports/tests.log', filemode='a',
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -13,21 +21,31 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def chrome_options(chrome_options, request):
-    headless = request.config.getoption("--headless")
-    if headless == "true":
+def old_driver(request):
+    chrome_options = webdriver.ChromeOptions()
+
+    headless = bool(request.config.getoption("--headless"))
+    if headless:
         chrome_options.add_argument("--headless")
-    return chrome_options
+
+    caps = {"goog:loggingPrefs": {"browser": "ALL"}}
+
+    import os
+    driver_path = os.getenv("CHROMEWEBDRIVER")
+    service = ChromeService(executable_path=driver_path) if driver_path \
+        else ChromeService(ChromeDriverManager().install())
+
+    return webdriver.Chrome(desired_capabilities=caps, options=chrome_options, service=service)
 
 
 @pytest.fixture
-def selenium(selenium, screenshotting_driver, request):
+def driver(old_driver, enhance_driver):
     enhanced_driver = None
     try:
-        enhanced_driver = screenshotting_driver(selenium)
+        enhanced_driver = enhance_driver(old_driver)
     except Exception as e:
         logger.error(e)
 
-    yield enhanced_driver if enhanced_driver else selenium
+    yield enhanced_driver if enhanced_driver else old_driver
 
-    selenium.quit()
+    old_driver.quit()

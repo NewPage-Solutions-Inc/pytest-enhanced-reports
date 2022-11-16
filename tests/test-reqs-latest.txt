@@ -1,7 +1,9 @@
 selenium
+webdriver-manager
 pytest
 pytest-bdd
-pytest-selenium
 allure-pytest-bdd
+pytest-order
+pre-commit
 
-../enhanced-allure-report/
+../src/

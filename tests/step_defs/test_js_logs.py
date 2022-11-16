@@ -1,12 +1,14 @@
 from pytest_bdd import scenario
 import json
 import pytest
-from tests.util import util
 from os import getcwd
 
+from .shared_steps import * # noqa
+from tests.util import util
 
-@scenario("../features/first_page.feature", "Run Test for browser's outputs")
-def test_run_js_logs(selenium):
+
+@scenario("../features/test_site.feature", "Run Test for browser's outputs")
+def test_run_js_logs(driver):
     pass
 
 

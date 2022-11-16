@@ -7,7 +7,9 @@ from _pytest.fixtures import FixtureRequest
 
 import logging
 
+
 logger = logging.getLogger(__name__)
+logger.info("Loaded " + __file__)
 
 
 class EnhancedReportOperationFrequency(Enum):
@@ -173,7 +175,7 @@ def get_all_values(request: FixtureRequest):
     if __param_values:
         return __param_values
 
-    logger.info("Getting values for all the options")
+    logger.debug("Getting values for all the options")
     __param_values = {
         parameter: _get_value(request, parameter) for parameter in __params.keys()
     }

@@ -1,20 +1,19 @@
-import logging
 import os
 from typing import Dict, Any, Tuple
 
-import dotenv
 import allure
 from allure_commons.types import AttachmentType
 from PIL import Image
 import cv2
 
 from . import common_utils
-from .common_utils import get_original_resolution
+from .common_utils import get_image_resolution
 from .config import Parameter
 
-dotenv.load_dotenv()
+import logging
 
 logger = logging.getLogger(__name__)
+logger.info("Loaded " + __file__)
 
 
 class ScreenRecorder:
@@ -30,24 +29,15 @@ class ScreenRecorder:
         These images will later be used to stich together into a video"""
         try:
             count = 0
-            if not os.path.isdir(self.__directory):
-                os.mkdir(self.__directory)
-                logging.info("Creating new directory: " + self.__directory)
+            common_utils.mkdir(self.__directory)
             while True:
-                driver.save_screenshot(
-                    self.__directory + "/" + str(count) + ".png"
-                )
+                driver.save_screenshot(self.__directory + f"/vid_frame{count}.png")
                 count += 1
                 if self.stop:
-                    logging.info("Stopping Screen Capture")
+                    logger.debug(f"Stopping screenshot capture for video. Captured {count} screenshots.")
                     break
-            logger.info(
-                "SCREENSHOTS CAPTURED AND WRITTEN ON DISK: " + str(count)
-            )
         except Exception as error:
-            logger.error(
-                "An Exception occurred while taking screenshot. " + str(error)
-            )
+            logger.error("An Exception occurred while taking screenshot. " + str(error))
 
     def create_video_from_images(
         self, scenario_info, location, video_size: tuple, frame_rate: int
@@ -56,24 +46,23 @@ class ScreenRecorder:
         fourcc = cv2.VideoWriter_fourcc(*"vp09")
         video_name = f"{location}/{scenario_info}.webm"
         video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
-        images_path = [
+        image_files = [
             f for f in os.listdir(self.__directory) if f.endswith(".png")
         ]
-        images_path = sorted(
-            images_path, key=lambda x: int(os.path.splitext(x)[0])
+        image_files = sorted(
+            image_files, key=lambda x: int(os.path.splitext(x)[0])
         )
-        for img in images_path:
-            if img.__contains__("png"):
-                video.write(
-                    cv2.resize(
-                        cv2.imread(os.path.join(self.__directory, img)),
-                        video_size,
-                    )
+        for img_file in image_files:
+            video.write(
+                cv2.resize(
+                    cv2.imread(os.path.join(self.__directory, img_file)),
+                    video_size
                 )
+            )
         video.release()
 
-        logger.info(
-            "TEST EXECUTION VIDEO RECORDING VIDEO STOPPED [Video Size: "
+        logger.debug(
+            "Video recording completed. [Video Size: "
             + str(video_size)
             + " - Frame Rate: "
             + str(frame_rate)
@@ -102,7 +91,7 @@ class ScreenRecorder:
             )
 
             if report_options[Parameter.VIDEO_KEEP_FILES]:
-                original_size = get_original_resolution(self.__directory)
+                original_size = get_image_resolution(self.__directory)
                 self.create_video_from_images(
                     scenario_info,
                     self.__video_store,

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 NAME = "enhanced-reports"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # To install the library, run the following
 #
@@ -15,8 +15,6 @@ INSTALL_REQUIRES = [
     "selenium >=4.0.0, <4.1.4",
     "pytest >=6.2.5, < 7.0.0",
     "pytest-bdd >=5.0.0, < 6.0.0",
-    "allure-pytest-bdd >=2.9.45, <3.0.0",
-    "allure-combine >=1.0.6, <2.0.0",
     "python-dotenv >=0.15.0, <1.0.0",
     "Pillow >=8.4.0, <9.0.0",
     "wrapt >=1.14.1, <2.0.0",
@@ -33,7 +31,8 @@ setup(
     author_email="qa@newpage.io",
     license="proprietary",
     packages=[
-        "enhanced_reports"
+        "enhanced_reports",
+        "enhanced_reports.report_libs"
     ],
     install_requires=INSTALL_REQUIRES,
     entry_points={"pytest11": ["enhanced_reports = enhanced_reports.core"]},

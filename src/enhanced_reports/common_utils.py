@@ -1,9 +1,11 @@
 import logging
 import os
+import re
 from typing import Tuple
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+logger.info("Loaded " + __file__)
 
 
 def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
@@ -13,8 +15,7 @@ def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
 
 
 def mkdir(dir_name):
-    if not os.path.isdir(dir_name):
-        os.makedirs(dir_name)
+    os.makedirs(dir_name, exist_ok=True)
 
 
 def delete_dir(dir_path):
@@ -25,26 +26,27 @@ def delete_dir(dir_path):
             else:
                 os.remove(os.path.join(dir_path, f))
         os.rmdir(dir_path)
-        logger.info(f"Deleted the dir '{dir_path}'")
+        logger.debug(f"Deleted the dir '{dir_path}'")
 
 
-def clean_temp_images(img_dir, file_name=None):  # TODO: Test if this removes only the temp images. Doesn't look like it
-    # Now clean the images directory or a single file if specified
-    if file_name is None:
-        if os.path.isdir(img_dir):
-            for f in os.listdir(img_dir):
-                if f.__contains__("png"):
-                    os.remove(os.path.join(img_dir, f))
-            logger.info(f"Temporary images cleaned from {img_dir}")
-    else:
+def delete_files(img_dir, file_name=None, extension="png"):
+    if file_name:
         os.remove(os.path.join(img_dir, file_name))
+        return
+
+    if not os.path.isdir(img_dir):
+        logger.warning(f"Directory '{img_dir}' does not exist")
+        return
+
+    for f in os.listdir(img_dir):
+        if f.endswith(extension):
+            os.remove(os.path.join(img_dir, f))
+    logger.debug(f"Files with extension {extension} deleted from {img_dir}")
 
 
 def clean_filename(value: str) -> str:
     # remove the undesirable characters
-    import re
-    regex: str = r"\b\d*[^\W\d_][^\W_]*\b"  # From https://stackoverflow.com/a/58835448/5376299
-    return re.sub(regex, "", value, 0, re.MULTILINE)
+    return re.sub(r'\W', '_', value)
 
 
 def fail_silently(func):
@@ -59,7 +61,7 @@ def fail_silently(func):
     return wrapped_func
 
 
-def get_original_resolution(directory, file_name=None):
+def get_image_resolution(directory, file_name=None):
     """get the original resolution of an image"""
     if not file_name:
         img = Image.open(

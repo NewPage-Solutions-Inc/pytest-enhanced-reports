@@ -1,3 +1,4 @@
+import inspect
 import logging
 from typing import Mapping, Any
 
@@ -11,9 +12,14 @@ from allure_commons.model2 import TestResult
 from allure_commons import plugin_manager
 from allure_commons.model2 import TestStepResult
 
-from src.enhanced_reports.config import Parameter
+from allure_pytest_bdd.pytest_bdd_listener import PytestBDDListener
+
+from enhanced_reports.config import Parameter
 
 logger = logging.getLogger(__name__)
+
+
+logger.info("Loaded " + __file__)
 
 
 def attach_text(name: str, value: str, **kwargs):
@@ -37,6 +43,7 @@ def attach_video(name: str, path: str, **kwargs):
 
 
 def update_test_results_for_scenario_outline():
+    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def _custom_write_test_case(self, uuid=None):
         """Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
@@ -63,8 +70,7 @@ def wrapper_for_unexecuted_steps():
     allure report doesn't include the steps that were not executed due to a failed step before them
     To overcome this issue we are intercepting the PytestBDDListener._scenario_finalizer method to add the
     non executed steps to test results"""
-
-    from allure_pytest_bdd.pytest_bdd_listener import PytestBDDListener
+    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     @wrapt.patch_function_wrapper(PytestBDDListener, "_scenario_finalizer")
     def wrap_scenario_finalizer(wrapped, instance, args, kwargs):
@@ -89,25 +95,18 @@ def wrapper_for_unexecuted_steps():
                 )
 
 
-def is_applicable(request: FixtureRequest, report_options: Mapping[Parameter, Any]) -> bool:
-    print("_"*50)
-    print(request.config.pluginmanager.get_plugins())
-    return request.config.pluginmanager.has_plugin("allure_pytest_bdd")
-
-
 def perform_session_setup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
-    logger.info("Performing session level setup for enhanced allure bdd")
     update_test_results_for_scenario_outline()
     wrapper_for_unexecuted_steps()
 
 
 def perform_session_cleanup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
-    logger.info("Performing session level cleanup for enhanced allure bdd")
+    pass
 
 
 def perform_function_setup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
-    logger.info("Performing function level setup for enhanced allure bdd")
+    pass
 
 
 def perform_function_cleanup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
-    logger.info("Performing function level cleanup for enhanced allure bdd")
+    pass
