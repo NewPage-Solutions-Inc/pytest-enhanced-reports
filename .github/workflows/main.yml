@@ -17,18 +17,13 @@ jobs:
 
     - name: test
       run: |
-        export CHROMEWEBDRIVER=/usr/bin/chromedriver
-        ls -l $CHROMEWEBDRIVER
-#        export CHROMEWEBDRIVER=$CHROMEWEBDRIVER/chromedriver
-#        ls -l $CHROMEWEBDRIVER
-#        sudo cp -r $CHROMEWEBDRIVER /usr/bin
-#        echo $CHROMEWEBDRIVER
-#        ls -l $CHROMEWEBDRIVER
-#        cp $CHROMEWEBDRIVER /usr/bin
-#        export CHROMEWEBDRIVER=/usr/bin/chromedriver
-#        ls -l $CHROMEWEBDRIVER
-#        ls -l /usr/bin/chromedriver
+        echo '{"capabilities": {"headless": true, "browser": "Chrome","goog:loggingPrefs": {"browser": "ALL"}}}' > capabilities-js-test.json
+        python3.9 -m pytest --driver Chrome \
+          --driver-path $CHROMEWEBDRIVER/chromedriver \
+          --alluredir=reports \
+          --variables capabilities-js-test.json \
+          --report_capture_browser_console_log 'always'
 
-    - name: run tests
-      run: |
-        tests/run.sh
+#    - name: run tests
+#      run: |
+#        tests/run.sh
