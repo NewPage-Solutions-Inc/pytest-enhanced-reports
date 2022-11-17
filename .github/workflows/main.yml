@@ -13,8 +13,9 @@ jobs:
 
     - name: install dependencies
       run: |
-        pip install -r tests/requirements.txt
+        pip install -r tests/test-reqs-latest.txt
 
     - name: run tests
       run: |
-        tests/run.sh
+        cd tests
+        ./reinstallAndRun.sh
