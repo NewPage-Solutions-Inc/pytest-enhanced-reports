@@ -1,4 +1,3 @@
-
 import pytest
 import logging
 
@@ -7,9 +6,12 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-logging.basicConfig(filename='reports/tests.log', filemode='a',
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
+logging.basicConfig(
+    filename="reports/tests.log",
+    filemode="a",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +33,17 @@ def old_driver(request):
     caps = {"goog:loggingPrefs": {"browser": "ALL"}}
 
     import os
-    driver_path = os.getenv("CHROMEWEBDRIVER")
-    service = ChromeService(executable_path=driver_path) if driver_path \
-        else ChromeService(ChromeDriverManager().install())
 
-    return webdriver.Chrome(desired_capabilities=caps, options=chrome_options, service=service)
+    driver_path = os.getenv("CHROMEWEBDRIVER")
+    service = (
+        ChromeService(executable_path=driver_path)
+        if driver_path
+        else ChromeService(ChromeDriverManager().install())
+    )
+
+    return webdriver.Chrome(
+        desired_capabilities=caps, options=chrome_options, service=service
+    )
 
 
 @pytest.fixture

@@ -6,7 +6,7 @@ from pytest_bdd import when, parsers, then, given
 logger = logging.getLogger(__name__)
 
 BASE_URL = (
-    "https://newpage-solutions-inc.github.io/allure-screenshots/test-site"
+    "https://newpage-solutions-inc.github.io/pytest-enhanced-reports/test-site"
 )
 FIRST_PAGE_URL = f"{BASE_URL}/index.html"
 SECOND_PAGE_URL = f"{BASE_URL}/page2.html"

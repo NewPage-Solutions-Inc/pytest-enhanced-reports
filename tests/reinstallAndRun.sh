@@ -11,4 +11,5 @@ then
   rm -f ./reports/tests.log
 fi
 
+mkdir -p reports
 pytest -vv --disable-warnings --headless=False --report_browser_console_log_capture_frequency='always' --alluredir='reports'
