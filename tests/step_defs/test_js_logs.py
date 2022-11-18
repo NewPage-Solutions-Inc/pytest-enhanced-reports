@@ -1,12 +1,14 @@
 from pytest_bdd import scenario
 import json
 import pytest
-from tests.util import util
 from os import getcwd
 
+from .shared_steps import *  # noqa
+from tests.util import util
 
-@scenario("../features/first_page.feature", "Run Test for browser's outputs")
-def test_run_js_logs(selenium):
+
+@scenario("../features/test_site.feature", "Run Test for browser's outputs")
+def test_run_js_logs(driver):
     pass
 
 
@@ -29,14 +31,14 @@ def test_verify_js_logs():
     for step in output["steps"]:
         if step.get("attachments"):
             for attachment in step.get("attachments"):
-                if attachment.get("name") == "Browser Outputs":
+                if "Logs from browser console" in attachment.get("name"):
                     actual_files.append(
                         f"{curr_dir}/{actual_file_dir}/"
                         + attachment.get("source")
                     )
     expected_files = [
-        f"{curr_dir}/tests/data/first_attachment.txt",
-        f"{curr_dir}/tests/data/second_attachment.txt",
+        f"{curr_dir}/data/first_attachment.txt",
+        f"{curr_dir}/data/second_attachment.txt",
     ]
     assert len(actual_files) == len(
         expected_files
