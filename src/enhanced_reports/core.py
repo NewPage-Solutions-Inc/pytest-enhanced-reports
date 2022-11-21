@@ -304,7 +304,7 @@ def __scenario_name_supplier(request: FixtureRequest) -> Callable[[], str]:
 
 # region WebDriver acquisition
 @fixture
-def _local_driver() -> dict[str, WebDriver]:
+def _local_driver() -> Dict[str, WebDriver]:
     return {"driver": None}  # type: ignore
 
 
