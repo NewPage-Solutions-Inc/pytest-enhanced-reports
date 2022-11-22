@@ -21,13 +21,13 @@ class EnhancedReportOperationFrequency(Enum):
 
 
 class Parameter(Enum):
-    JS_LOG_FREQUENCY = "browser_console_log_capture_frequency"
+    JS_LOG_FREQUENCY = "browser_console_log_capture"
 
-    SS_FREQUENCY = "screenshot_frequency"
+    SS_FREQUENCY = "screenshot_capture"
     SS_RESIZE_PERCENT = "screenshot_resize_percent"
     SS_HEIGHT = "screenshot_height"
     SS_WIDTH = "screenshot_width"
-    SS_HIGHLIGHT_ELEMENT = "highlight_element_in_screenshot"
+    SS_HIGHLIGHT_ELEMENT = "highlighted_screenshot"
     SS_KEEP_FILES = "keep_screenshots"
     SS_DIR = "screenshot_dir"
 
@@ -107,7 +107,7 @@ __params: Mapping[Parameter, Mapping[str, Any]] = {
     Parameter.VIDEO_RESIZE_PERCENT: {
         "default_value": 75,
         "cast_to": int,
-        "doc": "A percentage by which the video frames will be resized. This is ignored if screenshot height and width "
+        "doc": "A percentage by which the video frames will be resized. This is ignored if video height and width "
                "values are also provided. Valid values - 75, 60, 50, etc.",
     },
     Parameter.VIDEO_FRAME_RATE: {
