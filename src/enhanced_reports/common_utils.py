@@ -46,7 +46,7 @@ def delete_files(img_dir, file_name=None, extension="png"):
 
 def clean_filename(value: str) -> str:
     # remove the undesirable characters
-    return re.sub(r'\W', '_', value)
+    return re.sub(r"\W", "_", value)
 
 
 def fail_silently(func):

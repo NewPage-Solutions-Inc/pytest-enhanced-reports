@@ -17,15 +17,12 @@ setup(
     name=NAME,
     version=VERSION,
     description="Enhanced test reports for pytest",
-    long_description="Improves supported test reports by adding screenshots, videos and browser console outputs. "
-                     "Similar to what cypress does.",
-    author="newpage.io",
-    author_email="InnovationDesk@newpage.io",
-    license="MIT",
-    packages=[
-        "enhanced_reports",
-        "enhanced_reports.report_libs"
-    ],
+    long_description="A enhanced-allure-report to improve allure report by adding screenshots, videos, browser's "
+    "outputs",
+    author="SDET",
+    author_email="qa@newpage.io",
+    license="proprietary",
+    packages=["enhanced_reports", "enhanced_reports.report_libs"],
     install_requires=INSTALL_REQUIRES,
     entry_points={"pytest11": ["enhanced_reports = enhanced_reports.core"]},
     classifiers=["Framework :: Pytest"],
