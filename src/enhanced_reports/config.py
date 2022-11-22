@@ -48,33 +48,45 @@ __param_values: Mapping[Parameter, Any] = {}
 __params: Mapping[Parameter, Mapping[str, Any]] = {
     Parameter.JS_LOG_FREQUENCY: {
         "default_value": "failed_test_only",
-        "allowed_values": ["always", "each_ui_operation", "end_of_each_test", "failed_test_only", "never"],
+        "allowed_values": [
+            "always",
+            "each_ui_operation",
+            "end_of_each_test",
+            "failed_test_only",
+            "never",
+        ],
         "cast_to": EnhancedReportOperationFrequency,
         "doc": "Specifies when to capture info from the browser console log.",
     },
     Parameter.SS_FREQUENCY: {
         "default_value": "each_ui_operation",
-        "allowed_values": ["always", "each_ui_operation", "end_of_each_test", "failed_test_only", "never"],
+        "allowed_values": [
+            "always",
+            "each_ui_operation",
+            "end_of_each_test",
+            "failed_test_only",
+            "never",
+        ],
         "cast_to": EnhancedReportOperationFrequency,
         "doc": "Specifies when to capture screenshots.",
     },
     Parameter.SS_RESIZE_PERCENT: {
         "default_value": 40,
         "doc": "A percentage by which the screenshot will be resized. This is ignored if screenshot height and width "
-               "values are also provided. Valid values - 75, 60, 50, etc.",
+        "values are also provided. Valid values - 75, 60, 50, etc.",
         "cast_to": int,
     },
     Parameter.SS_HEIGHT: {
         "default_value": 0,
         "cast_to": int,
         "doc": "The expected height of the resized screenshot used in reports. Actual value could be slightly "
-               "different as it needs to fit the aspect ratio.",
+        "different as it needs to fit the aspect ratio.",
     },
     Parameter.SS_WIDTH: {
         "default_value": 0,
         "cast_to": int,
         "doc": "The expected width of the resized screenshot used in reports. Actual value could be slightly different "
-               "as it needs to fit the aspect ratio.",
+        "as it needs to fit the aspect ratio.",
     },
     Parameter.SS_HIGHLIGHT_ELEMENT: {
         "default_value": False,
@@ -108,7 +120,7 @@ __params: Mapping[Parameter, Mapping[str, Any]] = {
         "default_value": 75,
         "cast_to": int,
         "doc": "A percentage by which the video frames will be resized. This is ignored if screenshot height and width "
-               "values are also provided. Valid values - 75, 60, 50, etc.",
+        "values are also provided. Valid values - 75, 60, 50, etc.",
     },
     Parameter.VIDEO_FRAME_RATE: {
         "default_value": 30,
@@ -143,7 +155,9 @@ def _get_value(request: FixtureRequest, parameter: Parameter):
     return value
 
 
-def register_with(parser_or_group: Union[argparsing.Parser, argparsing.OptionGroup]):
+def register_with(
+    parser_or_group: Union[argparsing.Parser, argparsing.OptionGroup]
+):
     """Adds the command line arguments to the parser"""
     for parameter, details in __params.items():
 
@@ -177,7 +191,8 @@ def get_all_values(request: FixtureRequest):
 
     logger.debug("Getting values for all the options")
     __param_values = {
-        parameter: _get_value(request, parameter) for parameter in __params.keys()
+        parameter: _get_value(request, parameter)
+        for parameter in __params.keys()
     }
     return __param_values
 

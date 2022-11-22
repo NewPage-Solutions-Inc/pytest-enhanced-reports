@@ -13,8 +13,12 @@ from pytest import fixture
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.abstract_event_listener import AbstractEventListener
-from selenium.webdriver.support.event_firing_webdriver import EventFiringWebDriver
+from selenium.webdriver.support.abstract_event_listener import (
+    AbstractEventListener,
+)
+from selenium.webdriver.support.event_firing_webdriver import (
+    EventFiringWebDriver,
+)
 
 from . import screenshot_manager
 from . import browser_console_manager
@@ -47,6 +51,8 @@ def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
+
+
 # endregion
 
 
@@ -74,6 +80,7 @@ class EnhancedReportLabels(enum.Enum):
 
 class EnhancedReportTestState(enum.Enum):
     """Test states during which we expect a reportable event to occur."""
+
     BEFORE_TEST = "before test"
     CUSTOM_DURING_TEST = "custom during test"
     AFTER_TEST = "after test"
@@ -83,6 +90,8 @@ class EnhancedReportTestState(enum.Enum):
     FAILED = "failed"
     PASSED = "passed"
     SKIPPED = "skipped"
+
+
 # endregion
 
 
@@ -92,11 +101,28 @@ Maps each test state to a set of op. frequencies that allow data capture in that
 """
 __state_and_allowed_frequencies: Dict[EnhancedReportTestState, Set[OpFreq]] = {
     EnhancedReportTestState.BEFORE_TEST: {OpFreq.ALWAYS},
-    EnhancedReportTestState.BEFORE_UI_OPERATION: {OpFreq.ALWAYS, OpFreq.EACH_UI_OPERATION},
-    EnhancedReportTestState.AFTER_UI_OPERATION: {OpFreq.ALWAYS, OpFreq.EACH_UI_OPERATION},
-    EnhancedReportTestState.AFTER_TEST: {OpFreq.ALWAYS, OpFreq.END_OF_EACH_TEST},
-    EnhancedReportTestState.ERROR: {OpFreq.ALWAYS, OpFreq.END_OF_EACH_TEST, OpFreq.FAILED_TEST_ONLY},
-    EnhancedReportTestState.FAILED: {OpFreq.ALWAYS, OpFreq.END_OF_EACH_TEST, OpFreq.FAILED_TEST_ONLY},
+    EnhancedReportTestState.BEFORE_UI_OPERATION: {
+        OpFreq.ALWAYS,
+        OpFreq.EACH_UI_OPERATION,
+    },
+    EnhancedReportTestState.AFTER_UI_OPERATION: {
+        OpFreq.ALWAYS,
+        OpFreq.EACH_UI_OPERATION,
+    },
+    EnhancedReportTestState.AFTER_TEST: {
+        OpFreq.ALWAYS,
+        OpFreq.END_OF_EACH_TEST,
+    },
+    EnhancedReportTestState.ERROR: {
+        OpFreq.ALWAYS,
+        OpFreq.END_OF_EACH_TEST,
+        OpFreq.FAILED_TEST_ONLY,
+    },
+    EnhancedReportTestState.FAILED: {
+        OpFreq.ALWAYS,
+        OpFreq.END_OF_EACH_TEST,
+        OpFreq.FAILED_TEST_ONLY,
+    },
     EnhancedReportTestState.PASSED: {OpFreq.ALWAYS, OpFreq.END_OF_EACH_TEST},
     # planned for the future. not supported atm
     EnhancedReportTestState.CUSTOM_DURING_TEST: {},
@@ -115,56 +141,89 @@ __attachment_and_config: Dict[EnhancedReportAttachments, Parameter] = {
 }
 
 
-def __can_record(attachment_type: EnhancedReportAttachments, current_state: EnhancedReportTestState):
+def __can_record(
+    attachment_type: EnhancedReportAttachments,
+    current_state: EnhancedReportTestState,
+):
     # Get the config value for the current type
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     param_value = __report_options[__attachment_and_config[attachment_type]]
+    logger.info(f"current param_value {param_value}")
+    if (
+        not param_value
+        or param_value not in __state_and_allowed_frequencies[current_state]
+    ):
+        return False
 
     can_record: bool = True
 
-    if attachment_type == EnhancedReportAttachments.VIDEO and not param_value:  # Video is not enabled
+    if (
+        attachment_type == EnhancedReportAttachments.VIDEO and not param_value
+    ):  # Video is not enabled
         # logger.debug("Rejection reason: Video is not enabled")
         can_record = False
     elif attachment_type == EnhancedReportAttachments.SS_WITH_HIGHLIGHT:
         # With highlighted screenshots, check both the specific param and the screenshot frequency
-        if not param_value or __report_options[Parameter.SS_FREQUENCY] not in __state_and_allowed_frequencies[current_state]:
+        if (
+            not param_value
+            or __report_options[Parameter.SS_FREQUENCY]
+            not in __state_and_allowed_frequencies[current_state]
+        ):
             # logger.debug("Rejection reason: Highlighted screenshots are either not enabled, or they're not allowed in this state")
             can_record = False
-    elif param_value not in __state_and_allowed_frequencies[current_state]:
-        # logger.debug("Rejection reason: This attachment type is not allowed in this state")
-        can_record = False
 
     # logger.debug(f"Recording {attachment_type} is {'' if can_record else 'NOT '}allowed in state - {current_state}")
     return can_record
 
 
-def __report_data_handler(attachment_type: EnhancedReportAttachments, name: str, value: str, **kwargs):
+def __report_data_handler(
+    attachment_type: EnhancedReportAttachments, name: str, value: str, **kwargs
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     for report_mod in __currently_applicable_reports:
         try:
-            getattr(report_mod, f"attach_{attachment_type.value[0]}")(name, value, **kwargs)
+            getattr(report_mod, f"attach_{attachment_type.value[0]}")(
+                name, value, **kwargs
+            )
         except Exception as e:
-            logger.error(f"Error while attaching {attachment_type.value[1]} to report {report_mod}: {e}")
+            logger.error(
+                f"Error while attaching {attachment_type.value[1]} to report {report_mod}: {e}"
+            )
+
+
 # endregion
 
 
 # region Convenience functions for attaching data to reports
-def __capture_ss(attachment_type: EnhancedReportAttachments, state: EnhancedReportTestState, scenario_name, name,
-                 driver, element=None):
+def __capture_ss(
+    attachment_type: EnhancedReportAttachments,
+    state: EnhancedReportTestState,
+    scenario_name,
+    name,
+    driver,
+    element=None,
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     if not __can_record(attachment_type, state):
         return
 
-    if attachment_type == EnhancedReportAttachments.SS_WITH_HIGHLIGHT and element:
-        path: str = screenshot_manager.get_highlighted_screenshot(element, name, scenario_name,
-                                                                  __report_options, driver)
+    if (
+        attachment_type == EnhancedReportAttachments.SS_WITH_HIGHLIGHT
+        and element
+    ):
+        path: str = screenshot_manager.get_highlighted_screenshot(
+            element, name, scenario_name, __report_options, driver
+        )
     else:
-        path: str = screenshot_manager.get_screenshot(name, scenario_name,
-                                                      __report_options, driver)
+        path: str = screenshot_manager.get_screenshot(
+            name, scenario_name, __report_options, driver
+        )
 
     logger.debug(f"Captured screenshot path: {path}")
     if path:  # there is a chance that a screenshot was not captured
-        __report_data_handler(attachment_type, EnhancedReportLabels.SS_WITH_DESC.desc(name), path)
+        __report_data_handler(
+            attachment_type, EnhancedReportLabels.SS_WITH_DESC.desc(name), path
+        )
 
 
 def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
@@ -173,8 +232,13 @@ def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
         return
 
     logs = browser_console_manager.get_js_logs(driver)
-    __report_data_handler(EnhancedReportAttachments.JS_LOG,
-                          EnhancedReportLabels.JS_LOGS_WITH_DESC.desc(label), logs)
+    __report_data_handler(
+        EnhancedReportAttachments.JS_LOG,
+        EnhancedReportLabels.JS_LOGS_WITH_DESC.desc(label),
+        logs,
+    )
+
+
 # endregion
 
 
@@ -208,6 +272,8 @@ def _global_config(request, _report_options):
     if _report_options[Parameter.VIDEO_ENABLED]:
         common_utils.mkdir(_report_options[Parameter.VIDEO_DIR])
     # endregion
+
+
 # endregion
 
 
@@ -215,13 +281,18 @@ def _global_config(request, _report_options):
 def __get_all_module_names_in_relative_path(path: str) -> List[str]:
     import pkgutil
     import os
+
     # Getting the absolute path to the current file, and removing the file name to get the current directory
-    lib_path: str = os.path.abspath(__file__)[:-len("core.py")]
+    lib_path: str = os.path.abspath(__file__)[: -len("core.py")]
     return [name for _, name, _ in pkgutil.iter_modules([lib_path + path])]
 
 
-def __is_pytest_plugin_installed(request: FixtureRequest, plugin_name: str) -> bool:
+def __is_pytest_plugin_installed(
+    request: FixtureRequest, plugin_name: str
+) -> bool:
     return request.config.pluginmanager.has_plugin(plugin_name)
+
+
 # endregion
 
 
@@ -234,31 +305,46 @@ def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
     def report_specific_cleanup():
         for report_mod in __currently_applicable_reports:
             try:
-                logger.debug("Calling session scoped teardown for " + report_mod.__name__)
+                logger.debug(
+                    "Calling session scoped teardown for " + report_mod.__name__
+                )
                 report_mod.perform_session_cleanup(request, _report_options)
             except Exception as e:
-                logger.error(f"Error while performing session level cleanup for report {report_mod.__name__}: {e}")
+                logger.error(
+                    f"Error while performing session level cleanup for report {report_mod.__name__}: {e}"
+                )
 
     request.addfinalizer(report_specific_cleanup)
     # endregion
 
     # region Setup
-    supported_reports: List[str] = __get_all_module_names_in_relative_path("report_libs")
+    supported_reports: List[str] = __get_all_module_names_in_relative_path(
+        "report_libs"
+    )
     logger.debug(f"supported reports - {supported_reports}")
 
     import importlib
+
     for report_name in supported_reports:
         try:
             if __is_pytest_plugin_installed(request, report_name):
-                logger.debug(f"pytest plugin '{report_name}' is installed. Importing corresponding report lib")
-                mod = importlib.import_module(f".report_libs.{report_name}", package="enhanced_reports")
+                logger.debug(
+                    f"pytest plugin '{report_name}' is installed. Importing corresponding report lib"
+                )
+                mod = importlib.import_module(
+                    f".report_libs.{report_name}", package="enhanced_reports"
+                )
                 __currently_applicable_reports.append(mod)
                 logger.debug("Calling session scoped setup for " + report_name)
                 mod.perform_session_setup(request, _report_options)
             else:
-                logger.debug(f"pytest plugin '{report_name}' is not installed. Ignoring module")
+                logger.debug(
+                    f"pytest plugin '{report_name}' is not installed. Ignoring module"
+                )
         except Exception as e:
-            logger.error(f"Failed to load or setup session level enhancements for report {report_name}: {e}")
+            logger.error(
+                f"Failed to load or setup session level enhancements for report {report_name}: {e}"
+            )
 
     return __currently_applicable_reports
     # endregion
@@ -272,10 +358,15 @@ def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
     def report_specific_cleanup():
         for report_mod in _reports:
             try:
-                logger.debug("Calling function scoped teardown for " + report_mod.__name__)
+                logger.debug(
+                    "Calling function scoped teardown for "
+                    + report_mod.__name__
+                )
                 report_mod.perform_function_cleanup(request, _report_options)
             except Exception as e:
-                logger.error(f"Error while performing cleanup for function scope for report {report_mod.__name__}: {e}")
+                logger.error(
+                    f"Error while performing cleanup for function scope for report {report_mod.__name__}: {e}"
+                )
 
     request.addfinalizer(report_specific_cleanup)
     # endregion
@@ -283,11 +374,17 @@ def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
     # region Setup
     for report_mod in _reports:
         try:
-            logger.debug("Calling function scoped setup for " + report_mod.__name__)
+            logger.debug(
+                "Calling function scoped setup for " + report_mod.__name__
+            )
             report_mod.perform_function_setup(request, _report_options)
         except Exception as e:
-            logger.error(f"Error while performing function level setup for report {report_mod.__name__}: {e}")
+            logger.error(
+                f"Error while performing function level setup for report {report_mod.__name__}: {e}"
+            )
     # endregion
+
+
 # endregion
 
 
@@ -299,6 +396,8 @@ def _scenario_name(request: FixtureRequest) -> str:
 
 def __scenario_name_supplier(request: FixtureRequest) -> Callable[[], str]:
     return lambda: request.node.nodeid.split("/")[-1].replace("::", " - ")
+
+
 # endregion
 
 
@@ -316,42 +415,60 @@ def enhance_driver(request, _report_options, _local_driver):
 
         _local_driver["driver"] = driver
 
-        return EventFiringWebDriver(driver, WebDriverEventListener(_report_options,
-                                                                   __capture_ss,
-                                                                   __capture_js_logs,
-                                                                   __scenario_name_supplier(request)
-                                                                   )
-                                    )
+        return EventFiringWebDriver(
+            driver,
+            WebDriverEventListener(
+                _report_options,
+                __capture_ss,
+                __capture_js_logs,
+                __scenario_name_supplier(request),
+            ),
+        )
 
     return _enhanced_driver_getter
+
+
 # endregion
 
 
 # region Video recording
 @fixture(autouse=True)
-def _video_capture(request, _scenario_name, _report_options: Dict[Parameter, Any]):
+def _video_capture(
+    request, _scenario_name, _report_options: Dict[Parameter, Any]
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     screen_recorder = {}
     recorder_thread = None
-    if __can_record(EnhancedReportAttachments.VIDEO, EnhancedReportTestState.BEFORE_TEST):
+    if __can_record(
+        EnhancedReportAttachments.VIDEO, EnhancedReportTestState.BEFORE_TEST
+    ):
         logger.debug("Initializing video recording")
-        screen_recorder = ScreenRecorder(directory=_scenario_name, video_store=_report_options[Parameter.VIDEO_DIR])
+        screen_recorder = ScreenRecorder(
+            directory=_scenario_name,
+            video_store=_report_options[Parameter.VIDEO_DIR],
+        )
         common_utils.mkdir(_report_options[Parameter.VIDEO_DIR])
 
         driver = request.getfixturevalue("_local_driver")["driver"]
-        recorder_thread = threading.Thread(target=screen_recorder.start_capturing, name="Recorder", args=[driver])
+        recorder_thread = threading.Thread(
+            target=screen_recorder.start_capturing,
+            name="Recorder",
+            args=[driver],
+        )
 
         logger.debug("Starting video recording")
         recorder_thread.start()
 
         # this is inside the if block intentionally. only need to stop the recording if it was started
-        request.addfinalizer(lambda: screen_recorder.stop_recording_and_stitch_video(_report_options,
-                                                                                     recorder_thread,
-                                                                                     _scenario_name,
-                                                                                     _scenario_name)
-                             )
+        request.addfinalizer(
+            lambda: screen_recorder.stop_recording_and_stitch_video(
+                _report_options, recorder_thread, _scenario_name, _scenario_name
+            )
+        )
 
     yield  # dummy yield in order to prevent the fixture from being run from the beginning during teardown
+
+
 # endregion
 
 
@@ -361,11 +478,36 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
     op_name = "after action chain"
 
     driver = request.getfixturevalue("_local_driver")["driver"]
-    _report_options: Dict[Parameter, Any] = request.getfixturevalue("_report_options")
     scenario_name = request.getfixturevalue("_scenario_name")
 
     if __can_record(EnhancedReportAttachments.SS, current_state):
-        __capture_ss(EnhancedReportAttachments.SS, current_state, scenario_name, op_name, driver)
+        __capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            scenario_name,
+            op_name,
+            driver,
+        )
+
+    if __can_record(EnhancedReportAttachments.JS_LOG, current_state):
+        __capture_js_logs(current_state, driver, op_name)
+
+
+def pytest_bdd_after_scenario(request, feature, scenario):
+    current_state = EnhancedReportTestState.AFTER_TEST
+    op_name = "after test"
+
+    driver = request.getfixturevalue("_local_driver")["driver"]
+    scenario_name = request.getfixturevalue("_scenario_name")
+
+    if __can_record(EnhancedReportAttachments.SS, current_state):
+        __capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            scenario_name,
+            op_name,
+            driver,
+        )
 
     if __can_record(EnhancedReportAttachments.JS_LOG, current_state):
         __capture_js_logs(current_state, driver, op_name)
@@ -389,55 +531,112 @@ def _create_wrappers(request: FixtureRequest, _report_options):
         wrapped(*args, **kwargs)  # note it is already bound to the instance
 
         scenario_name = request.getfixturevalue("_scenario_name")
-        __capture_ss(EnhancedReportAttachments.SS, current_state, scenario_name, op_name, instance._driver)
+        __capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            scenario_name,
+            op_name,
+            instance._driver,
+        )
         __capture_js_logs(current_state, instance._driver, op_name)
 
 
 class WebDriverEventListener(AbstractEventListener):
-    def __init__(self, _report_options: Dict[Parameter, Any], ss_handler: Callable, js_log_handler: Callable,
-                 scenario_name_supplier: Callable[[], str]):
+    def __init__(
+        self,
+        _report_options: Dict[Parameter, Any],
+        ss_handler: Callable,
+        js_log_handler: Callable,
+        scenario_name_supplier: Callable[[], str],
+    ):
         # just store all arguments as instance vars
         self.__report_options: Dict[Parameter, Any] = _report_options
         self.__capture_ss: Callable = ss_handler
         self.__capture_js_logs: Callable = js_log_handler
-        self.__scenario_name_supplier: Callable[[], str] = scenario_name_supplier
+        self.__scenario_name_supplier: Callable[
+            [], str
+        ] = scenario_name_supplier
 
     def after_navigate_to(self, url, driver: WebDriver):
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name: str = f"Navigation to {url}"
-        self.__capture_ss(EnhancedReportAttachments.SS, current_state, self.__scenario_name_supplier(), op_name, driver)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+        )
         self.__capture_js_logs(current_state, driver, op_name)
 
     def before_click(self, element, driver):
         current_state = EnhancedReportTestState.BEFORE_UI_OPERATION
         op_name: str = "before click"
-        self.__capture_ss(EnhancedReportAttachments.SS_WITH_HIGHLIGHT, current_state, self.__scenario_name_supplier(),
-                          op_name, driver, element=element)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS_WITH_HIGHLIGHT,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+            element=element,
+        )
 
     def after_click(self, element, driver):
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name: str = "after click"
-        self.__capture_ss(EnhancedReportAttachments.SS, current_state, self.__scenario_name_supplier(), op_name, driver)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+        )
         self.__capture_js_logs(current_state, driver, op_name)
 
     def before_change_value_of(self, element, driver):
         current_state = EnhancedReportTestState.BEFORE_UI_OPERATION
         op_name = "before keyboard input"
-        self.__capture_ss(EnhancedReportAttachments.SS_WITH_HIGHLIGHT, current_state, self.__scenario_name_supplier(),
-                          op_name, driver, element=element)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS_WITH_HIGHLIGHT,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+            element=element,
+        )
 
     def after_change_value_of(self, element, driver):
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name = "after keyboard input"
-        self.__capture_ss(EnhancedReportAttachments.SS, current_state, self.__scenario_name_supplier(), op_name, driver)
-        self.__capture_js_logs(EnhancedReportTestState.AFTER_UI_OPERATION, driver, op_name)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+        )
+        self.__capture_js_logs(
+            EnhancedReportTestState.AFTER_UI_OPERATION, driver, op_name
+        )
 
     def after_execute_script(self, script, driver):
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name = "after JS execution"
-        self.__capture_ss(EnhancedReportAttachments.SS, current_state, self.__scenario_name_supplier(), op_name, driver)
+        self.__capture_ss(
+            EnhancedReportAttachments.SS,
+            current_state,
+            self.__scenario_name_supplier(),
+            op_name,
+            driver,
+        )
         self.__capture_js_logs(current_state, driver, op_name)
 
     def after_navigate_back(self, driver):
-        self.__capture_js_logs(EnhancedReportTestState.AFTER_UI_OPERATION, driver, "after navigating back")
+        self.__capture_js_logs(
+            EnhancedReportTestState.AFTER_UI_OPERATION,
+            driver,
+            "after navigating back",
+        )
+
+
 # endregion

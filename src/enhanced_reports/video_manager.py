@@ -20,7 +20,9 @@ class ScreenRecorder:
     def __init__(self, directory: str = "temp/", video_store: str = "videos"):
         self.stop = False
         self.__directory = directory  # This directory will be used to save the frames temporarily
-        self.__video_store = video_store  # This will be used to save the recorded video
+        self.__video_store = (
+            video_store  # This will be used to save the recorded video
+        )
         self.__desired_resolution: Tuple[int, int] = None
         self.__resize_factor: float = None
 
@@ -31,13 +33,19 @@ class ScreenRecorder:
             count = 0
             common_utils.mkdir(self.__directory)
             while True:
-                driver.save_screenshot(self.__directory + f"/vid_frame{count}.png")
+                driver.save_screenshot(
+                    self.__directory + f"/vid_frame{count}.png"
+                )
                 count += 1
                 if self.stop:
-                    logger.debug(f"Stopping screenshot capture for video. Captured {count} screenshots.")
+                    logger.debug(
+                        f"Stopping screenshot capture for video. Captured {count} screenshots."
+                    )
                     break
         except Exception as error:
-            logger.error("An Exception occurred while taking screenshot. " + str(error))
+            logger.error(
+                "An Exception occurred while taking screenshot. " + str(error)
+            )
 
     def create_video_from_images(
         self, scenario_info, location, video_size: tuple, frame_rate: int
@@ -56,7 +64,7 @@ class ScreenRecorder:
             video.write(
                 cv2.resize(
                     cv2.imread(os.path.join(self.__directory, img_file)),
-                    video_size
+                    video_size,
                 )
             )
         video.release()
@@ -72,7 +80,11 @@ class ScreenRecorder:
         return video_name
 
     def stop_recording_and_stitch_video(
-        self, report_options: Dict[Parameter, Any], recorder_thread, scenario_info, attachment_name
+        self,
+        report_options: Dict[Parameter, Any],
+        recorder_thread,
+        scenario_info,
+        attachment_name,
     ):
         try:
             self.stop = True
@@ -110,10 +122,19 @@ class ScreenRecorder:
     def get_video_resize_resolution(self, report_options: Dict[Parameter, Any]):
         try:
             directory = self.__directory
-            desired_resolution = self.__desired_resolution if self.__desired_resolution \
-                else (report_options[Parameter.VIDEO_WIDTH], report_options[Parameter.VIDEO_HEIGHT])
-            resize_factor = self.__resize_factor if self.__resize_factor \
+            desired_resolution = (
+                self.__desired_resolution
+                if self.__desired_resolution
+                else (
+                    report_options[Parameter.VIDEO_WIDTH],
+                    report_options[Parameter.VIDEO_HEIGHT],
+                )
+            )
+            resize_factor = (
+                self.__resize_factor
+                if self.__resize_factor
                 else report_options[Parameter.VIDEO_RESIZE_PERCENT] / 100
+            )
 
             if desired_resolution == (0, 0):
                 # use the resize factor to calculate the desired resolution from actual resolution of the image
@@ -127,7 +148,9 @@ class ScreenRecorder:
                         ][0],
                     )
                 )
-                desired_resolution = common_utils.get_resized_resolution(img.width, img.height, resize_factor)
+                desired_resolution = common_utils.get_resized_resolution(
+                    img.width, img.height, resize_factor
+                )
 
             return desired_resolution
         except Exception as error:
