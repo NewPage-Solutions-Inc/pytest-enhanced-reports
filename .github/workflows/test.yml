@@ -1,5 +1,10 @@
 name: tests for plugin
-on: [pull_request]
+
+pull_request:
+  branches:
+    - main
+    - release/*
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,11 +16,12 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: install dependencies
+    - name: Install dependencies
       run: |
-        pip install -r tests/test-reqs-latest.txt
+        cd tests
+        pip install -r ./test-reqs.txt
 
-    - name: run tests
+    - name: Basic tests
       run: |
         cd tests
         ./reinstallAndRun.sh
