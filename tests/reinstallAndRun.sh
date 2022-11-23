@@ -12,4 +12,4 @@ then
 fi
 
 mkdir -p reports
-pytest -vv --disable-warnings --headless=False --report_browser_console_log_capture_frequency='always' --alluredir='reports'
+pytest -vv --disable-warnings --headless=False --report_browser_console_log_capture='always' --alluredir='reports'
