@@ -1,0 +1,27 @@
+name: tests for plugin
+
+pull_request:
+  branches:
+    - main
+    - release/*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        cd tests
+        pip install -r ./test-reqs.txt
+
+    - name: Basic tests
+      run: |
+        cd tests
+        ./reinstallAndRun.sh
