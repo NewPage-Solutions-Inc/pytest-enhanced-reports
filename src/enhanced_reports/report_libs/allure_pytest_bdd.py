@@ -95,18 +95,26 @@ def wrapper_for_unexecuted_steps():
                 )
 
 
-def perform_session_setup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
+def perform_session_setup(
+    request: FixtureRequest, report_options: Mapping[Parameter, Any]
+):
     update_test_results_for_scenario_outline()
     wrapper_for_unexecuted_steps()
 
 
-def perform_session_cleanup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
+def perform_session_cleanup(
+    request: FixtureRequest, report_options: Mapping[Parameter, Any]
+):
     pass
 
 
-def perform_function_setup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
+def perform_function_setup(
+    request: FixtureRequest, report_options: Mapping[Parameter, Any]
+):
     pass
 
 
-def perform_function_cleanup(request: FixtureRequest, report_options: Mapping[Parameter, Any]):
+def perform_function_cleanup(
+    request: FixtureRequest, report_options: Mapping[Parameter, Any]
+):
     pass

@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Any, Tuple
 
 from datetime import datetime
@@ -25,19 +24,32 @@ __resize_factor: float = None
 
 
 @common_utils.fail_silently
-def get_screenshot(screenshot_name: str, scenario_name: str, plugin_options, driver: WebDriver) -> str:
+def get_screenshot(
+    screenshot_name: str, scenario_name: str, plugin_options, driver: WebDriver
+) -> str:
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     # selenium can't take screenshots if a browser alert/prompt is open. trying to do so would break the current test.
     # so, skipping screenshots in such a case
     if expected_conditions.alert_is_present()(driver):
         return ""
-    return __get_resized_image(driver.get_screenshot_as_base64(), plugin_options, scenario_name,
-                               screenshot_name=screenshot_name)
+    return __get_resized_image(
+        driver.get_screenshot_as_base64(),
+        plugin_options,
+        scenario_name,
+        screenshot_name=screenshot_name,
+    )
 
 
 @common_utils.fail_silently
-def get_highlighted_screenshot(element: WebElement, action_name: str, scenario_name: str, report_options,
-                               driver: WebDriver, color: str = "red", border_width: int = 5) -> str:
+def get_highlighted_screenshot(
+    element: WebElement,
+    action_name: str,
+    scenario_name: str,
+    report_options,
+    driver: WebDriver,
+    color: str = "red",
+    border_width: int = 5,
+) -> str:
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def apply_style(s):
@@ -50,7 +62,9 @@ def get_highlighted_screenshot(element: WebElement, action_name: str, scenario_n
         "border: {0}px solid {1}; padding:{2}px".format(border_width, color, 5)
     )
 
-    path: str = get_screenshot(action_name, scenario_name, report_options, driver)
+    path: str = get_screenshot(
+        action_name, scenario_name, report_options, driver
+    )
 
     apply_style(original_style)
 
@@ -58,15 +72,29 @@ def get_highlighted_screenshot(element: WebElement, action_name: str, scenario_n
 
 
 def __get_resized_image(
-    image_bytes, report_options: Dict[Parameter, Any], scenario_name, screenshot_name="screenshot"
+    image_bytes,
+    report_options: Dict[Parameter, Any],
+    scenario_name,
+    screenshot_name="screenshot",
 ):
     global __desired_resolution, __resize_factor
-    __desired_resolution = __desired_resolution if __desired_resolution \
-                               else (report_options[Parameter.SS_WIDTH], report_options[Parameter.SS_HEIGHT])
-    __resize_factor = __resize_factor if __resize_factor else report_options[Parameter.SS_RESIZE_PERCENT] / 100
+    __desired_resolution = (
+        __desired_resolution
+        if __desired_resolution
+        else (
+            report_options[Parameter.SS_WIDTH],
+            report_options[Parameter.SS_HEIGHT],
+        )
+    )
+    __resize_factor = (
+        __resize_factor
+        if __resize_factor
+        else report_options[Parameter.SS_RESIZE_PERCENT] / 100
+    )
 
-    tmp_filename: str = screenshot_name[:30]  # truncate to the first 30 chars
-    screenshot_file_name: str = common_utils.clean_filename(f" {str(datetime.now())}") + ".png"
+    screenshot_file_name: str = (
+        common_utils.clean_filename(f" {str(datetime.now())}") + ".png"
+    )
     logger.debug("Temp screenshot file name: " + screenshot_file_name)
 
     # open the image directly thru an in-memory buffer
@@ -79,8 +107,13 @@ def __get_resized_image(
         img.save(f"{ss_dir}/{screenshot_file_name}")
 
     # if the user has not passed a specific resolution, create it from the resize factor
-    desired_resolution = common_utils.get_resized_resolution(img.width, img.height, __resize_factor) \
-        if __desired_resolution == (0, 0) else __desired_resolution
+    desired_resolution = (
+        common_utils.get_resized_resolution(
+            img.width, img.height, __resize_factor
+        )
+        if __desired_resolution == (0, 0)
+        else __desired_resolution
+    )
     logger.debug("Desired resolution: " + str(desired_resolution))
 
     # resize image to the desired resolution. if more customizability is needed, consider the resize or reduce methods
@@ -88,8 +121,10 @@ def __get_resized_image(
     # in tobytes() need to return the array before the join operation happens
     # return img.tobytes()
 
-    path: str = f"{report_options[Parameter.SS_DIR]}/" \
-                f"{common_utils.clean_filename(scenario_name)}_{screenshot_file_name}"
+    path: str = (
+        f"{report_options[Parameter.SS_DIR]}/"
+        f"{common_utils.clean_filename(scenario_name)}_{screenshot_file_name}"
+    )
     img.save(path)
     logger.debug("Resized screenshot file path: " + path)
     return path

@@ -15,16 +15,18 @@ def get_js_logs(driver: WebDriver):
 
 
 def _capture_output(driver: WebDriver):
-    return driver.get_log('browser')
+    return driver.get_log("browser")
 
 
 def _format_outputs(logs: list) -> str:
-    output = ''
+    output = ""
     for item in logs:
-        i_time = datetime.fromtimestamp(item.get('timestamp', 0)/1000).strftime('%Y-%m-%d %H:%M:%S')
-        i_source = item.get('source')
-        i_level = item.get('level')
-        i_message = item.get('message')
+        i_time = datetime.fromtimestamp(
+            item.get("timestamp", 0) / 1000
+        ).strftime("%Y-%m-%d %H:%M:%S")
+        i_source = item.get("source")
+        i_level = item.get("level")
+        i_message = item.get("message")
         output += "{} {} {} {}\n".format(i_time, i_level, i_source, i_message)
 
     return output
