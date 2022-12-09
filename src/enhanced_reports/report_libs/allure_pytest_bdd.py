@@ -60,6 +60,11 @@ def update_test_results_for_scenario_outline():
                         adj_parameters.append(param)
                 test_result.parameters = adj_parameters
 
+            for index in range(0, len(test_result.steps)):
+                if str(test_result.steps[index].name).__contains__(':\n|'):
+                    step_desc = str(test_result.steps[index].name).split(':')
+                    test_result.steps[index].name = step_desc[0]
+
             plugin_manager.hook.report_result(result=test_result)
 
     AllureLifecycle.write_test_case = _custom_write_test_case
