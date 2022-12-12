@@ -1,7 +1,7 @@
 from setuptools import setup
 
 NAME = "pytest-enhanced-reports"
-VERSION = "1.2.0"
+VERSION = "1.2.2"
 
 INSTALL_REQUIRES = [
     "selenium >=4.0.0, <4.1.4",
@@ -19,9 +19,9 @@ setup(
     description="Enhanced test reports for pytest",
     long_description="A enhanced-allure-report to improve allure report by adding screenshots, videos, browser's "
     "outputs",
-    author="SDET",
-    author_email="qa@newpage.io",
-    license="proprietary",
+    author="NewPage Solutions",
+    author_email="InnovationDesk@newpage.io",
+    license="MIT",
     packages=["enhanced_reports", "enhanced_reports.report_libs"],
     install_requires=INSTALL_REQUIRES,
     entry_points={"pytest11": ["enhanced_reports = enhanced_reports.core"]},

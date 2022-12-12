@@ -3,7 +3,7 @@ name: tests for plugin
 pull_request:
   branches:
     - main
-    - release/*
+    - release*
 
 jobs:
   build:
