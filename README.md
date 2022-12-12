@@ -1,7 +1,6 @@
 
 # pytest-enhanced-reports
 
----
 A pytest plugin to capture screenshots, videos and JS logs (similar to Cypress) and attach them to supported test reports.
 
 ## Support
@@ -19,9 +18,8 @@ A pytest plugin to capture screenshots, videos and JS logs (similar to Cypress) 
 
 
 ## Installation
-Until the plugin is published on PyPi, it needs to be installed/updated from source.
 ```bash
-pip install -U PATH_TO_THE_PLUGIN_SOURCE_DIR
+pip install pytest-enhanced-reports
 ```
 
 ## Usage
@@ -41,13 +39,13 @@ def driver():
 #### After plugin integration
 ```python
 @pytest.fixture
-def driver(screenshotting_driver):  # `screenshotting_driver` is a fixture provided by the plugin
+def driver(enhance_driver):  # `enhance_driver` is a fixture provided by the plugin
     
     driver = webdriver.Chrome()
 
     enhanced_driver = None
     try:
-        enhanced_driver = screenshotting_driver(driver)
+        enhanced_driver = enhance_driver(driver)
     except Exception as e:
         logger.error(e)
 
@@ -62,20 +60,20 @@ The plugin can be configured through command line arguments and/or environment v
 The following sets of shell commands are equivalent and do the same thing. These examples ignore any configuration for all other plugins/dependencies.
 ```bash
 # Using only command line arguments
-pytest --report_screenshot_level="error-only" --report_screenshot_dir="~/tests/screenshots" --report_js_logs_capture="on_failure"
+pytest --report_screenshot_capture="error-only" --report_screenshot_dir="~/tests/screenshots" --report_browser_console_log_capture="on_failure"
 ```
 
 ```bash
 # Using a combination of command line arguments and environment variables
 REPORT_SCREENSHOT_DIR="~/tests/screenshots"
-pytest --report_screenshot_level="error-only"  --report_js_logs_capture="on_failure"
+pytest --report_screenshot_capture="error-only"  --report_browser_console_log_capture="on_failure"
 ```
 
 ```bash
 # Using only environment variables
-REPORT_SCREENSHOT_LEVEL="error-only"
+REPORT_SCREENSHOT_CAPTURE="error-only"
 REPORT_SCREENSHOT_DIR="~/tests/screenshots"
-REPORT_JS_LOGS_CAPTURE="on_failure"
+REPORT_BROWSER_CONSOLE_LOG_CAPTURE="on_failure"
 pytest
 ```
 
