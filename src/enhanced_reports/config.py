@@ -146,7 +146,8 @@ def _get_value(request: FixtureRequest, parameter: Parameter):
     val_from_env_var = os.getenv(
         full_arg_name.upper(), default=__params[parameter]["default_value"]
     )
-    value = request.config.getoption(full_arg_name, default=val_from_env_var)
+    val_from_cmd_line = request.config.getoption(full_arg_name)
+    value = val_from_cmd_line or val_from_env_var
 
     # Cast the value to the specified type, if needed
     if "cast_to" in __params[parameter]:
@@ -177,7 +178,7 @@ def register_with(
         parser_or_group.addoption(
             f"--{__default_prefix}{parameter.value}",
             action=details.get("action", __default_action),
-            default=details.get("default_value", None),
+            default=None,
             help=docstring,
         )
 

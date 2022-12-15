@@ -1,7 +1,7 @@
 from setuptools import setup
 
 NAME = "pytest-enhanced-reports"
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 INSTALL_REQUIRES = [
     "selenium >=4.0.0, <4.1.4",
