@@ -5,6 +5,27 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
+# try:
+#     from enhanced_reports import core
+#     local_run = False
+# except Exception:
+#     local_run = True
+# if not local_run:
+#     pytest_plugins = [
+#         "enhanced_reports.core"
+#     ]
+# from enhanced_reports.core import (
+#     pytest_addoption,
+#     _report_options,
+#     _global_config,
+#     _reports,
+#     _reports_function_scope,
+#     _scenario_name,
+#     _local_driver,
+#     enhance_driver,
+#     _video_capture,
+#     _create_wrappers
+# )
 
 logging.basicConfig(
     filename="reports/tests.log",
@@ -25,8 +46,9 @@ def pytest_addoption(parser):
 @pytest.fixture
 def old_driver(request):
     chrome_options = webdriver.ChromeOptions()
-
-    headless = bool(request.config.getoption("--headless"))
+    headless = (
+        True if request.config.getoption("--headless") == "True" else False
+    )
     if headless:
         chrome_options.add_argument("--headless")
 
