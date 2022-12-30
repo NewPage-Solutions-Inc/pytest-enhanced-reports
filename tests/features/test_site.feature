@@ -11,8 +11,7 @@ Feature: Test First Page
     And User clicks on submit button
     Then User can see welcome message for existing user
 
-  @new_user
-  Scenario: New user submit
+  Scenario: Run Test for clean up file
     When User enters first name New
     And User enters last name User
     And User enters email new_user@test.com
