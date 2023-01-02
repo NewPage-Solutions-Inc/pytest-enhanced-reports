@@ -17,16 +17,14 @@ logger = logging.getLogger(__name__)
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--headless", action="store", default="true", help="run test headless"
+        "--headless", action="store", default="True", help="run test headless"
     )
 
 
 @pytest.fixture
 def old_driver(request):
     chrome_options = webdriver.ChromeOptions()
-    headless = (
-        True if request.config.getoption("--headless") == "True" else False
-    )
+    headless = request.config.getoption("--headless") == "True"
     if headless:
         chrome_options.add_argument("--headless")
 
