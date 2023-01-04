@@ -5,7 +5,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
-
 logging.basicConfig(
     filename="reports/tests.log",
     filemode="a",
@@ -18,15 +17,14 @@ logger = logging.getLogger(__name__)
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--headless", action="store", default="true", help="run test headless"
+        "--headless", action="store", default="True", help="run test headless"
     )
 
 
 @pytest.fixture
 def old_driver(request):
     chrome_options = webdriver.ChromeOptions()
-
-    headless = bool(request.config.getoption("--headless"))
+    headless = request.config.getoption("--headless") == "True"
     if headless:
         chrome_options.add_argument("--headless")
 
