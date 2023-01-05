@@ -23,10 +23,22 @@ logger.info("Loaded " + __file__)
 
 
 def attach_text(name: str, value: str, **kwargs):
+    """
+    Attach text to the scenario step
+    @param name: Provide name as a string input
+    @param value: Provide value as a string input
+    @param kwargs:
+    """
     allure.attach(bytes(value, "utf-8"), name, AttachmentType.TEXT)
 
 
 def attach_image(name: str, path: str, **kwargs):
+    """
+    Attach image path to the scenario step
+    @param name: Provide name as a string input
+    @param path: Provide image path as a string input
+    @param kwargs:
+    """
     allure.attach.file(
         path,
         name=name,
@@ -35,6 +47,12 @@ def attach_image(name: str, path: str, **kwargs):
 
 
 def attach_video(name: str, path: str, **kwargs):
+    """
+    Attach video path to the scenario step
+    @param name: Provide name as a string input
+    @param path: Provide video path as a string input
+    @param kwargs:
+    """
     allure.attach.file(
         path,
         name=name,
@@ -43,6 +61,12 @@ def attach_video(name: str, path: str, **kwargs):
 
 
 def update_test_results_for_scenario_outline():
+    """
+    Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
+    inclusion of tests with scenario outlines in allure report. There is no fix available yet, so we manually
+    remove the params which are equals to '_pytest_bdd_example'. This param if included in test results, causes
+    errors in report generation due to duplicate keys in the json
+    """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def _custom_write_test_case(self, uuid=None):
@@ -61,9 +85,9 @@ def update_test_results_for_scenario_outline():
                 test_result.parameters = adj_parameters
 
             for index in range(0, len(test_result.steps)):
-                if ':\n|' in test_result.steps[index].name:
+                if ":\n|" in test_result.steps[index].name:
                     # Remove the data table from the step name
-                    step_desc = test_result.steps[index].name.split(':')
+                    step_desc = test_result.steps[index].name.split(":")
                     test_result.steps[index].name = step_desc[0]
 
             plugin_manager.hook.report_result(result=test_result)
@@ -72,10 +96,12 @@ def update_test_results_for_scenario_outline():
 
 
 def wrapper_for_unexecuted_steps():
-    """When a bdd step fails, test execution is stopped hence next steps are not executed,
+    """
+    When a bdd step fails, test execution is stopped hence next steps are not executed,
     allure report doesn't include the steps that were not executed due to a failed step before them
     To overcome this issue we are intercepting the PytestBDDListener._scenario_finalizer method to add the
-    non executed steps to test results"""
+    non executed steps to test results
+    """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     @wrapt.patch_function_wrapper(PytestBDDListener, "_scenario_finalizer")

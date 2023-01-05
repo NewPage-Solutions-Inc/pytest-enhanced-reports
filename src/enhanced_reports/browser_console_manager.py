@@ -9,16 +9,31 @@ logger.info("Loaded " + __file__)
 
 
 def get_js_logs(driver: WebDriver):
+    """
+    Return JavaScript logs in the format of %Y-%m-%d %H:%M:%S level source message.
+    @param driver: Instance of a Webdriver.
+    @return: Return formatted output string.
+    """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     logs = _capture_output(driver)
     return _format_outputs(logs)
 
 
 def _capture_output(driver: WebDriver):
+    """
+    Return browser log of a driver instance
+    @param driver: Instance of a Webdriver.
+    @return: Return list of browser logs
+    """
     return driver.get_log("browser")
 
 
 def _format_outputs(logs: list) -> str:
+    """
+    Format list of logs and convert in the string format - %Y-%m-%d %H:%M:%S level source message.
+    @param logs: List of logs
+    @return: Output in the String format
+    """
     output = ""
     for item in logs:
         i_time = datetime.fromtimestamp(

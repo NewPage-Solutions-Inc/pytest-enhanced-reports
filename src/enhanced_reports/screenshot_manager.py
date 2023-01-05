@@ -27,6 +27,14 @@ __resize_factor: float = None
 def get_screenshot(
     screenshot_name: str, scenario_name: str, plugin_options, driver: WebDriver
 ) -> str:
+    """
+    Return the screenshot for the scenario name
+    @param screenshot_name: Provide the screenshot name
+    @param scenario_name: Provide the scenario name
+    @param plugin_options: Provide plugin options contains video_height and video_width
+    @param driver: Provide the driver instance
+    @return: Return image path
+    """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     # selenium can't take screenshots if a browser alert/prompt is open. trying to do so would break the current test.
     # so, skipping screenshots in such a case
@@ -50,6 +58,17 @@ def get_highlighted_screenshot(
     color: str = "red",
     border_width: int = 5,
 ) -> str:
+    """
+    Return an image path for the web element action
+    @param element: Provide web element
+    @param action_name: Provide action name
+    @param scenario_name: Provide Scenario name
+    @param report_options: Provide report options
+    @param driver: Provide driver instance
+    @param color: Provide color values like red, green and yellow
+    @param border_width: Provide border width
+    @return: return path of an image
+    """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def apply_style(s):
@@ -77,6 +96,14 @@ def __get_resized_image(
     scenario_name,
     screenshot_name="screenshot",
 ):
+    """
+    Return resized screenshot file path
+    @param image_bytes: Provide image size in the form of bytes
+    @param report_options: Provide report options
+    @param scenario_name: Provide scenario name
+    @param screenshot_name: Provide screenshot name
+    @return: Resized screenshot file path
+    """
     global __desired_resolution, __resize_factor
     __desired_resolution = (
         __desired_resolution
