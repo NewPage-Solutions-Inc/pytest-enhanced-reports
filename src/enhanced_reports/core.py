@@ -185,20 +185,24 @@ def __can_record(
 
 
 def __report_data_handler(
-    attachment_type: EnhancedReportAttachments, name: str, value: str, **kwargs
+    attachment_type: EnhancedReportAttachments,
+    attachment_name: str,
+    attachment_value: str,
+    **kwargs,
 ):
     """
-    This method fetch a value from EnhancedReportAttachments ENUM like text, image and video
-    @param attachment_type: Provide attachment type as VIDEO, TXT and SS_WITH_HIGHLIGHT
-    @param name: Provide label as a string
-    @param value: Provide path as a string
+    This method call the attachment methods dynamic like attach_text, attach_image and attach_video
+    @param attachment_type: Provide attachment type as JS_LOG, SS, SS_WITH_HIGHLIGHT and VIDEO
+    @param attachment_name: Provide label as a string like text, image and video
+    @param attachment_value: Provide path as a string
     @param kwargs: Provide any related args of EnhancedReportAttachments
     """
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     for report_mod in __currently_applicable_reports:
         try:
+            # Form a method Ex: attach_text(attachment_name, attachment_value)
             getattr(report_mod, f"attach_{attachment_type.value[0]}")(
-                name, value, **kwargs
+                attachment_name, attachment_value, **kwargs
             )
         except Exception as e:
             logger.error(
@@ -220,11 +224,11 @@ def __capture_ss(
 ):
     """
     Capture screenshots of a scenario for every action of a highlighted element
-    @param attachment_type: Provide attachment type as VIDEO, TXT and SS_WITH_HIGHLIGHT
+    @param attachment_type: Provide attachment type as VIDEO, TXT, SS and SS_WITH_HIGHLIGHT
     @param state: Provide enhanced report state as "before test", "custom during test",
     "after test", "before ui operation", "after ui operation", "error", "failed", "passed", "skipped".
     @param scenario_name: Provide scenario name
-    @param name: Provide action name
+    @param name: Provide action name or screenshot name
     @param driver: Provide instance of a driver
     @param element: Provide an element
     @return:
