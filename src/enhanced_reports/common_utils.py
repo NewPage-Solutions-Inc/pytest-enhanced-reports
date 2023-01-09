@@ -88,7 +88,7 @@ def fail_silently(func):
     return wrapped_func
 
 
-def get_image_resolution(directory, file_name=None):
+def get_image_resolution(directory, file_name=None) -> Tuple[int, int]:
     """
     Return the original resolution of an image for provide file name from the directory or
     by default first image file used from the directory provides for the resolution of an image.

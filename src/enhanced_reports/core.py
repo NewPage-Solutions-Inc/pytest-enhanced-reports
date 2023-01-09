@@ -144,7 +144,7 @@ __attachment_and_config: Dict[EnhancedReportAttachments, Parameter] = {
 def __can_record(
     attachment_type: EnhancedReportAttachments,
     current_state: EnhancedReportTestState,
-):
+) -> bool:
     """
     This method returns True or False based on enhancement report attachment type and enhanced report state.
     @param attachment_type: Provide attachment type as VIDEO, TXT and SS_WITH_HIGHLIGHT

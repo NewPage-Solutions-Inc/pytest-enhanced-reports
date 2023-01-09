@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.info("Loaded " + __file__)
 
 
-def get_js_logs(driver: WebDriver):
+def get_js_logs(driver: WebDriver) -> str:
     """
     Return JavaScript logs in the format of %Y-%m-%d %H:%M:%S level source message.
     @param driver: Instance of a Webdriver.
@@ -19,7 +19,7 @@ def get_js_logs(driver: WebDriver):
     return _format_outputs(logs)
 
 
-def _capture_output(driver: WebDriver):
+def _capture_output(driver: WebDriver) -> list:
     """
     Return browser log of a driver instance
     @param driver: Instance of a Webdriver.

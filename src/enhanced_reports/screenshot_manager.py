@@ -95,7 +95,7 @@ def __get_resized_image(
     report_options: Dict[Parameter, Any],
     scenario_name,
     screenshot_name="screenshot",
-):
+) -> str:
     """
     Return resized screenshot file path
     @param image_bytes: Provide image size in the form of bytes

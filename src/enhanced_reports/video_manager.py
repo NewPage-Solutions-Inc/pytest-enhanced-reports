@@ -52,14 +52,14 @@ class ScreenRecorder:
 
     def create_video_from_images(
         self, scenario_info, location, video_size: tuple, frame_rate: int
-    ):
+    ) -> str:
         """
         This method will stitch the images under /video directory into a video.
         @param scenario_info: Provide the scenario info
         @param location: path to record a video
         @param video_size: Resolution of an image contains height and width
         @param frame_rate: Provide frame_rate and default is 30
-        @return: Return the stitch video
+        @return: Return the stitch video path
         """
         fourcc = cv2.VideoWriter_fourcc(*"vp09")
         video_name = f"{location}/{scenario_info}.webm"
@@ -136,11 +136,13 @@ class ScreenRecorder:
             # Now clean the images directory
             common_utils.delete_dir(self.__directory)
 
-    def get_video_resize_resolution(self, report_options: Dict[Parameter, Any]):
+    def get_video_resize_resolution(
+        self, report_options: Dict[Parameter, Any]
+    ) -> Tuple[int, int]:
         """
         Return resize resolution of a Video
         @param report_options: Report options contains default width and height
-        @return:
+        @return: Return new width and height in Tuple format
         """
         try:
             directory = self.__directory
