@@ -13,6 +13,7 @@ from pytest import fixture
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.abstract_event_listener import (
     AbstractEventListener,
 )
@@ -217,9 +218,9 @@ def __report_data_handler(
 def __capture_ss(
     attachment_type: EnhancedReportAttachments,
     state: EnhancedReportTestState,
-    scenario_name,
-    name,
-    driver,
+    scenario_name: str,
+    name: str,
+    driver: WebDriver,
     element=None,
 ):
     """
@@ -257,7 +258,9 @@ def __capture_ss(
         )
 
 
-def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
+def __capture_js_logs(
+    state: EnhancedReportTestState, driver: WebDriver, label: str
+):
     """
     Capture JavaScript Logs
     @param state: Provide enhanced report state as "before test", "custom during test",
@@ -283,7 +286,9 @@ def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
 
 # region Report agnostic setup and teardown
 @fixture(scope="session", autouse=True)
-def _global_config(request, _report_options):
+def _global_config(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     # region Teardown
@@ -348,7 +353,9 @@ def __is_pytest_plugin_installed(
 
 # region handling report lib integrations
 @fixture(scope="session", autouse=True)
-def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
+def _reports(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+) -> List[ModuleType]:
 
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
@@ -360,9 +367,9 @@ def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
                     "Calling session scoped teardown for " + report_mod.__name__
                 )
                 report_mod.perform_session_cleanup(request, _report_options)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
-                    f"Error while performing session level cleanup for report {report_mod.__name__}: {e}"
+                    f"Error while performing session level cleanup for report {report_mod.__name__}: {exc}"
                 )
 
     request.addfinalizer(report_specific_cleanup)
@@ -402,7 +409,11 @@ def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
 
 
 @fixture(autouse=True)
-def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
+def _reports_function_scope(
+    request: FixtureRequest,
+    _reports: List[ModuleType],
+    _report_options: Dict[Parameter, Any],
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     # region Teardown
@@ -414,9 +425,9 @@ def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
                     + report_mod.__name__
                 )
                 report_mod.perform_function_cleanup(request, _report_options)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
-                    f"Error while performing cleanup for function scope for report {report_mod.__name__}: {e}"
+                    f"Error while performing cleanup for function scope for report {report_mod.__name__}: {exc}"
                 )
 
     request.addfinalizer(report_specific_cleanup)
@@ -459,7 +470,11 @@ def _local_driver() -> Dict[str, WebDriver]:
 
 
 @fixture  # TODO: test this with a session scoped fixture in the test framework for instantiating the driver
-def enhance_driver(request, _report_options, _local_driver):
+def enhance_driver(
+    request: FixtureRequest,
+    _report_options: Dict[Parameter, Any],
+    _local_driver,
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def _enhanced_driver_getter(driver: WebDriver):
@@ -485,7 +500,9 @@ def enhance_driver(request, _report_options, _local_driver):
 # region Video recording
 @fixture(autouse=True)
 def _video_capture(
-    request, _scenario_name, _report_options: Dict[Parameter, Any]
+    request: FixtureRequest,
+    _scenario_name: str,
+    _report_options: Dict[Parameter, Any],
 ):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     screen_recorder = {}
@@ -524,7 +541,9 @@ def _video_capture(
 
 
 # region Screenshot & js log capture
-def pytest_bdd_step_error(request, feature, scenario, step, step_func):
+def pytest_bdd_step_error(
+    request: FixtureRequest, feature, scenario, step, step_func
+):
     """
     Record screenshot or js logs for bdd step error
     @param request: Provide request a fixture
@@ -552,7 +571,7 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
         __capture_js_logs(current_state, driver, op_name)
 
 
-def pytest_bdd_after_scenario(request, feature, scenario):
+def pytest_bdd_after_scenario(request: FixtureRequest, feature, scenario):
     """
     Record screenshot or js logs for after each scenario
     @param request: Provide request a fixture
@@ -579,7 +598,9 @@ def pytest_bdd_after_scenario(request, feature, scenario):
 
 
 @fixture(scope="session", autouse=True)
-def _create_wrappers(request: FixtureRequest, _report_options):
+def _create_wrappers(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+):
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     current_state = EnhancedReportTestState.AFTER_UI_OPERATION
     op_name = "after action chain"
@@ -622,9 +643,9 @@ class WebDriverEventListener(AbstractEventListener):
             [], str
         ] = scenario_name_supplier
 
-    def after_navigate_to(self, url, driver: WebDriver):
+    def after_navigate_to(self, url: str, driver: WebDriver):
         """
-        Capture screenshot and JS logs before after navigating of a url
+        Capture screenshot and JS logs before after navigating of an url
         @param url: Provide an url
         @param driver: Provide instance of a driver
         """
@@ -639,7 +660,7 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def before_click(self, element, driver):
+    def before_click(self, element: WebElement, driver: WebDriver):
         """
         Capture screenshot before click of an element
         @param element: Provide web element
@@ -656,7 +677,7 @@ class WebDriverEventListener(AbstractEventListener):
             element=element,
         )
 
-    def after_click(self, element, driver):
+    def after_click(self, element: WebElement, driver: WebDriver):
         """
         Capture screenshot after click of an element
         @param element: Provide web element
@@ -673,7 +694,7 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def before_change_value_of(self, element, driver):
+    def before_change_value_of(self, element: WebElement, driver: WebDriver):
         """
         Capture screenshot before keyboard input
         @param element: Provide web element
@@ -690,7 +711,7 @@ class WebDriverEventListener(AbstractEventListener):
             element=element,
         )
 
-    def after_change_value_of(self, element, driver):
+    def after_change_value_of(self, element: WebElement, driver: WebDriver):
         """
         Capture screenshot after keyboard input
         @param element: Provide web element
@@ -709,10 +730,9 @@ class WebDriverEventListener(AbstractEventListener):
             EnhancedReportTestState.AFTER_UI_OPERATION, driver, op_name
         )
 
-    def after_execute_script(self, script, driver):
+    def after_execute_script(self, driver: WebDriver):
         """
         Capture screenshot after JS execution
-        @param script: Provide web element
         @param driver: Provide instance of a driver
         """
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
@@ -726,7 +746,7 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def after_navigate_back(self, driver):
+    def after_navigate_back(self, driver: WebDriver):
         """
         Capture JS logs for navigating back
         @param driver: Provide driver instance.

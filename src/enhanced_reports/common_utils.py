@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 logger.info("Loaded " + __file__)
 
 
-def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
+def get_resized_resolution(
+    width: int, height: int, resize_factor: float
+) -> Tuple[int, int]:
     """
     Return custom resolution of an image with width and height given resize factor.
     @param width: Width to resize.
@@ -21,7 +23,7 @@ def get_resized_resolution(width, height, resize_factor) -> Tuple[int, int]:
     return new_width, new_height
 
 
-def mkdir(dir_name):
+def mkdir(dir_name: str):
     """
     Creates a new directory at the specified path.
     @param dir_name: The path of the new directory to be created.
@@ -29,7 +31,7 @@ def mkdir(dir_name):
     os.makedirs(dir_name, exist_ok=True)
 
 
-def delete_dir(dir_path):
+def delete_dir(dir_path: str):
     """
     Deletes the directory at the specified path.
     If the directory is not empty, the contents will be deleted as well.
@@ -45,7 +47,7 @@ def delete_dir(dir_path):
         logger.debug(f"Deleted the dir '{dir_path}'")
 
 
-def delete_files(img_dir, file_name=None, extension="png"):
+def delete_files(img_dir: str, file_name=None, extension="png"):
     """
     Deletes all files in the specified path or specified filename from the directory.
     @param img_dir: The path of the directory where the files are located.
@@ -88,7 +90,7 @@ def fail_silently(func):
     return wrapped_func
 
 
-def get_image_resolution(directory, file_name=None) -> Tuple[int, int]:
+def get_image_resolution(directory: str, file_name=None) -> Tuple[int, int]:
     """
     Return the original resolution of an image for provide file name from the directory or
     by default first image file used from the directory provides for the resolution of an image.

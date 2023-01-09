@@ -3,6 +3,7 @@ from typing import Dict, Any, Tuple
 
 import allure
 from allure_commons.types import AttachmentType
+from selenium.webdriver.remote.webdriver import WebDriver
 from PIL import Image
 import cv2
 
@@ -26,7 +27,7 @@ class ScreenRecorder:
         self.__desired_resolution: Tuple[int, int] = None
         self.__resize_factor: float = None
 
-    def start_capturing(self, driver):
+    def start_capturing(self, driver: WebDriver):
         """
         This method will start capturing images and saving them on disk under /video folder.
         These images will later be used to stitch together into a video.
@@ -51,7 +52,11 @@ class ScreenRecorder:
             )
 
     def create_video_from_images(
-        self, scenario_info, location, video_size: tuple, frame_rate: int
+        self,
+        scenario_info: str,
+        location: str,
+        video_size: tuple,
+        frame_rate: int,
     ) -> str:
         """
         This method will stitch the images under /video directory into a video.

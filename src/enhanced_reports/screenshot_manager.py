@@ -91,9 +91,9 @@ def get_highlighted_screenshot(
 
 
 def __get_resized_image(
-    image_bytes,
+    image_bytes: bytes,
     report_options: Dict[Parameter, Any],
-    scenario_name,
+    scenario_name: str,
     screenshot_name="screenshot",
 ) -> str:
     """
