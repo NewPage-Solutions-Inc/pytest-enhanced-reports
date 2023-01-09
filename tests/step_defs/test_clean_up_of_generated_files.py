@@ -41,23 +41,13 @@ def keep_files_mode(request):
     """
     prefix = "report_"
     screenshot_enable = (
-        True
-        if request.config.getoption(f"--{prefix}screenshot_capture") != "never"
-        else False
+        request.config.getoption(f"--{prefix}screenshot_capture") != "never"
     )
     video_enable = (
-        True
-        if request.config.getoption(f"--{prefix}video_recording") == "True"
-        else False
+        request.config.getoption(f"--{prefix}video_recording") == "True"
     )
     keep_screenshots = (
-        True
-        if request.config.getoption(f"--{prefix}keep_screenshots") == "True"
-        else False
+        request.config.getoption(f"--{prefix}keep_screenshots") == "True"
     )
-    keep_videos = (
-        True
-        if request.config.getoption(f"--{prefix}keep_videos") == "True"
-        else False
-    )
+    keep_videos = request.config.getoption(f"--{prefix}keep_videos") == "True"
     return screenshot_enable and keep_screenshots, video_enable and keep_videos
