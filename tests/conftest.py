@@ -24,6 +24,7 @@ def pytest_addoption(parser):
 @pytest.fixture
 def old_driver(request):
     chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--window-size=1024,768")
     headless = request.config.getoption("--headless") == "True"
     if headless:
         chrome_options.add_argument("--headless")
