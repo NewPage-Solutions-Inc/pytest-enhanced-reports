@@ -41,14 +41,16 @@ __report_options: Dict[Parameter, Any] = {}
 
 # region Registering and retrieving config parameters
 def pytest_addoption(parser: argparsing.Parser):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug("Entered Adoption" + inspect.currentframe().f_code.co_name)
     group = parser.getgroup("enhanced-report")
     config.register_with(group)
 
 
 @fixture(scope="session", autouse=True)
 def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered Report Options" + inspect.currentframe().f_code.co_name
+    )
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
@@ -198,7 +200,9 @@ def __report_data_handler(
     @param attachment_value: Provide path as a string
     @param kwargs: Provide any related args of EnhancedReportAttachments
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered Report Data Handler" + inspect.currentframe().f_code.co_name
+    )
     for report_mod in __currently_applicable_reports:
         try:
             # Form a method Ex: attach_text(attachment_name, attachment_value)
@@ -234,7 +238,7 @@ def __capture_ss(
     @param element: Provide an element
     @return:
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug("Entered Capture SS" + inspect.currentframe().f_code.co_name)
     if not __can_record(attachment_type, state):
         return
 
@@ -269,7 +273,7 @@ def __capture_js_logs(
     @param label: Provide label as string
     @return: Return none for alert as a special case.
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug("Entered JS Logs" + inspect.currentframe().f_code.co_name)
     if not __can_record(EnhancedReportAttachments.JS_LOG, state):
         return
 
@@ -289,7 +293,9 @@ def __capture_js_logs(
 def _global_config(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered Global Config" + inspect.currentframe().f_code.co_name
+    )
 
     # region Teardown
     def remove_test_dir():
@@ -357,7 +363,7 @@ def _reports(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ) -> List[ModuleType]:
 
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug("Entered Reports" + inspect.currentframe().f_code.co_name)
 
     # region Teardown
     def report_specific_cleanup():
@@ -414,7 +420,9 @@ def _reports_function_scope(
     _reports: List[ModuleType],
     _report_options: Dict[Parameter, Any],
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered Reports Function Scope" + inspect.currentframe().f_code.co_name
+    )
 
     # region Teardown
     def report_specific_cleanup():
@@ -504,7 +512,9 @@ def _video_capture(
     _scenario_name: str,
     _report_options: Dict[Parameter, Any],
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered Video Capture" + inspect.currentframe().f_code.co_name
+    )
     screen_recorder = {}
     recorder_thread = None
     if __can_record(
@@ -601,7 +611,9 @@ def pytest_bdd_after_scenario(request: FixtureRequest, feature, scenario):
 def _create_wrappers(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(
+        "Entered create wrappers" + inspect.currentframe().f_code.co_name
+    )
     current_state = EnhancedReportTestState.AFTER_UI_OPERATION
     op_name = "after action chain"
 

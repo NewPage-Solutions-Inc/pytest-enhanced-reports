@@ -21,7 +21,7 @@ def get_js_logs(driver: WebDriver) -> str:
 
 def _capture_output(driver: WebDriver) -> list:
     """
-    Return browser log of a driver instance
+    Return browser log of a driver
     @param driver: Instance of a Webdriver.
     @return: Return list of browser logs
     """
