@@ -1,18 +1,10 @@
-from pytest_bdd import scenario
 import json
-import pytest
 from os import getcwd
 
-from .shared_steps import *  # noqa
+from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
 
 
-@scenario("../features/test_site.feature", "Run Test for browser's outputs")
-def test_run_js_logs(driver):
-    pass
-
-
-@pytest.mark.order(after="test_run_js_logs")
 def test_verify_js_logs():
     actual_file_dir = "reports"
     actual_file = util.find_newest_report(
