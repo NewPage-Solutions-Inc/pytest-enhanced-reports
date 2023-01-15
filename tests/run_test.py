@@ -1,26 +1,58 @@
 import pytest
-import subprocess
+from subprocess import Popen
 import os
 import shutil
 
-# clean up folders and recreate them
-report_folders = ["reports"]
-print(os.path.exists(os.path.join(os.curdir, "reports")))
-for item in report_folders:
-    if os.path.exists(os.path.join(os.curdir, item)):
-        shutil.rmtree(os.path.join(os.curdir, item))
-    os.makedirs(os.path.join(os.curdir, item), exist_ok=True)
+TIMEOUT = 120  # 120 seconds timeout for running normal tests
 
 
-RUN_ARGS = [
-    "-vv",
-    "--disable-warnings",
-    "--headless=False",
-    "--report_browser_console_log_capture=always",
-    "--alluredir='reports'",
+def clean_up_report_directories(report_dir):
+    if os.path.exists(os.path.join(os.curdir, report_dir)):
+        shutil.rmtree(os.path.join(os.curdir, report_dir))
+    os.makedirs(os.path.join(os.curdir, report_dir), exist_ok=True)
+
+
+RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
+--headless=True \
+--alluredir='{0}' \
+--report_browser_console_log_capture='{1}' \
+normal_tests"
+
+RUN_PLUGIN_TESTS = "pytest -vv --disable-warnings \
+--headless=True \
+--report_browser_console_log_capture='{0}' \
+plugin_tests"
+
+JS_LOG_FREQUENCY = [
+    # "always",
+    # "each_ui_operation",
+    # "end_of_each_test",
+    # "failed_test_only",
+    "never",
 ]
 
-FREQUENCY = ["always", "never"]
+# run normal tests with different frequency
+normal_tests_processes = []
+for a_frequency in JS_LOG_FREQUENCY:
+    print(f"Start running NORMAL tests: js_log_frequency={a_frequency}...")
+    clean_up_report_directories(a_frequency)
+    normal_tests_processes.append(
+        Popen(RUN_NORMAL_TESTS.format(a_frequency, a_frequency), shell=True)
+    )
 
-# run tests in normal_tests folder
-pytest.main(RUN_ARGS.append("normal_tests/"))
+
+# check if processes is finished
+for a_process in normal_tests_processes:
+    a_process.wait(TIMEOUT)
+
+
+plugin_tests_processes = []
+# run plugin tests
+for a_frequency in JS_LOG_FREQUENCY:
+    print(f"Start running PLUGIN tests: js_log_frequency={a_frequency}...")
+    plugin_tests_processes.append(
+        Popen(RUN_PLUGIN_TESTS.format(a_frequency), shell=True)
+    )
+
+
+[a_process.wait(TIMEOUT) for a_process in plugin_tests_processes]
