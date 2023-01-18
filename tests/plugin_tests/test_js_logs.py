@@ -1,6 +1,5 @@
 import json
-from os import getcwd, path, curdir, makedirs
-from shutil import rmtree
+from os import getcwd
 from subprocess import Popen
 import pytest
 import logging
@@ -34,7 +33,7 @@ plugin_tests"
 @pytest.mark.parametrize("frequency", JS_LOG_FREQUENCY)
 def test_js_logs(frequency):
     logger.info("Clean up folder ")
-    clean_up_report_directories(frequency)
+    util.clean_up_report_directories(frequency)
 
     logger.info(f"Start running NORMAL tests: js_log_frequency={frequency}...")
     test_process = Popen(
@@ -116,9 +115,3 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
             assert (
                 item.rstrip("\n") in actual_file_content
             ), "console logs are not matching."
-
-
-def clean_up_report_directories(report_dir):
-    if path.exists(path.join(curdir, report_dir)):
-        rmtree(path.join(curdir, report_dir))
-    makedirs(path.join(curdir, report_dir), exist_ok=True)

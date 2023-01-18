@@ -1,21 +1,57 @@
 import cv2
 import numpy as np
-from pytest_bdd import scenario
 import json
 import pytest
 from os import getcwd
-
+from subprocess import Popen
 from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
+import logging
+
+logger = logging.getLogger(__name__)
+
+SCREENSHOT_FREQUENCY = [
+    "always",
+    "each_ui_operation",
+    "end_of_each_test",
+    "failed_test_only",
+    "never",
+]
+
+TIMEOUT = 120  # 120 seconds timeout for running normal tests
+
+RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
+--headless=True \
+--alluredir='{0}' \
+--report_browser_console_log_capture='{1}' \
+normal_tests"
+
+RUN_PLUGIN_TESTS = "pytest -vv --disable-warnings \
+--headless=True \
+--report_browser_console_log_capture='{0}' \
+plugin_tests"
 
 
-@scenario("../features/test_site.feature", "Run Test for browser's outputs")
-def test_run_ss(driver):
-    pass
+@pytest.mark.parametrize("frequency", SCREENSHOT_FREQUENCY)
+def test_js_logs(frequency):
+    logger.info("Clean up folder ")
+    util.clean_up_report_directories(frequency)
+
+    logger.info(
+        f"Start running NORMAL tests: screenshot_frequency={frequency}..."
+    )
+    test_process = Popen(
+        RUN_NORMAL_TESTS.format(frequency, frequency), shell=True
+    )
+    test_process.wait(TIMEOUT)
+
+    logger.info(
+        f"Start running PLUGIN tests: screenshot_frequency={frequency}..."
+    )
+    verify_screenshot(frequency)
 
 
-@pytest.mark.order(after="test_run_ss")
-def test_verify_ss():
+def verify_screenshot(frequency):
     actual_file_dir = "reports"
     actual_file = util.find_newest_report(
         "Run Test for browser's outputs", actual_file_dir
