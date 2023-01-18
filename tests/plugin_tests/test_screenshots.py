@@ -5,7 +5,7 @@ import json
 import pytest
 from os import getcwd
 
-from .shared_steps import *  # noqa
+from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
 
 
