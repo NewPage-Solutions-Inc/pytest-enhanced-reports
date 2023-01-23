@@ -67,7 +67,7 @@ def verify_js_logs(js_log_frequency):
 def verify_js_logs_with_params(current_dir, frequency, scenario):
     actual_file = util.find_newest_report(scenario, frequency)
 
-    # for a_file in list_of_files:
+    # read report file (to get all js log files in ordered)
     with open(actual_file) as f:
         output = json.load(f)
 
@@ -75,28 +75,30 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
         assert False, "Test was not run successfully or file not found!"
 
     actual_files = []
-    # collect js_logs in steps
+    actual_report_dir = f"{current_dir}/{frequency}/"
+    # collect js_logs in steps (output > steps > attachments)
     for step in output["steps"]:
-        if step.get("attachments"):
-            for attachment in step.get("attachments"):
-                if "Logs from browser console" in attachment.get("name"):
-                    actual_files.append(
-                        f"{current_dir}/{frequency}/" + attachment.get("source")
-                    )
-    # collect js_logs in attachment
-    for attachment in output["attachments"]:
-        if "Logs from browser console" in attachment.get("name"):
-            actual_files.append(
-                f"{current_dir}/{frequency}/" + attachment.get("source")
-            )
+        actual_files.extend(collect_js_logs(step, actual_report_dir))
+    # collect js_logs in attachment (output > attachments)
+    actual_files.extend(collect_js_logs(output, actual_report_dir))
 
     data_path_prefix = f"{current_dir}/data/js_logs/{frequency}"
-    expected_files = [f for f in listdir(data_path_prefix) if path.isfile(path.join(data_path_prefix, f))]
+    expected_files = [
+        path.join(data_path_prefix, f)
+        for f in listdir(data_path_prefix)
+        if path.isfile(path.join(data_path_prefix, f))
+    ]
+    expected_files = sorted(expected_files, key=lambda x: path.basename(x))
 
+    # compare number of js files
     assert len(actual_files) == len(
         expected_files
     ), "number of js output files are different"
+
+    # compare file content
     for i in range(len(expected_files)):
+        logger.error(actual_files[i])
+        logger.error(expected_files[i])
         with open(actual_files[i]) as act:
             actual_file_content = "".join(act.readlines())
         with open(expected_files[i]) as exp:
@@ -111,3 +113,12 @@ def clean_up_report_directories(report_dir):
     if path.exists(path.join(curdir, report_dir)):
         rmtree(path.join(curdir, report_dir))
     makedirs(path.join(curdir, report_dir), exist_ok=True)
+
+
+def collect_js_logs(source, path_prefix):
+    output = []
+    if source.get("attachments"):
+        for attachment in source["attachments"]:
+            if "Logs from browser console" in attachment.get("name"):
+                output.append(f"{path_prefix}/" + attachment.get("source"))
+    return output
