@@ -6,6 +6,7 @@ import pytest
 import logging
 from tests.util import util
 from enhanced_reports.config import EnhancedReportOperationFrequency
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -86,16 +87,18 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
 
     # compare file content
     for i in range(len(expected_files)):
-        logger.error(actual_files[i])
-        logger.error(expected_files[i])
         with open(actual_files[i]) as act:
-            actual_file_content = "".join(act.readlines())
+            actual_file_content = act.readlines()
         with open(expected_files[i]) as exp:
             expected_file_content = exp.readlines()
-        for item in expected_file_content:
-            assert (
-                item.rstrip("\n") in actual_file_content
-            ), "console logs are not matching."
+
+        assert len(actual_file_content) == len(
+            expected_file_content
+        ), f"2 files are different {actual_file_content} vs {expected_file_content}"
+        for j in range(len(actual_file_content)):
+            assert compare_js_logs_without_timespan(
+                actual_file_content[j], expected_file_content[j]
+            ), f"js logs are different {actual_file_content[j]} vs {expected_file_content[j]}"
 
 
 def clean_up_report_directories(report_dir):
@@ -111,3 +114,13 @@ def collect_js_logs(source, path_prefix):
             if "Logs from browser console" in attachment.get("name"):
                 output.append(f"{path_prefix}/" + attachment.get("source"))
     return output
+
+
+def compare_js_logs_without_timespan(actual, expect):
+    if actual.strip() == expect.strip():
+        return True
+    # remove datetime and timestamp
+    regex_str = r"^[\d-]*\s[\d:]*"
+    actual = re.sub(regex_str, "", actual)
+    expect = re.sub(regex_str, "", expect)
+    return actual == expect
