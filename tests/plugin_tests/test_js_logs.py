@@ -4,7 +4,6 @@ from shutil import rmtree
 from subprocess import Popen
 import pytest
 import logging
-from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
 from enhanced_reports.config import EnhancedReportOperationFrequency
 
