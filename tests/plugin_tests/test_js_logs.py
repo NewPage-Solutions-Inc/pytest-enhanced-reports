@@ -6,16 +6,9 @@ import pytest
 import logging
 from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
+from enhanced_reports.config import EnhancedReportOperationFrequency
 
 logger = logging.getLogger(__name__)
-
-JS_LOG_FREQUENCY = [
-    "always",
-    "each_ui_operation",
-    "end_of_each_test",
-    "failed_test_only",
-    "never",
-]
 
 TIMEOUT = 120  # 120 seconds timeout for running normal tests
 
@@ -31,7 +24,9 @@ RUN_PLUGIN_TESTS = "pytest -vv --disable-warnings \
 plugin_tests"
 
 
-@pytest.mark.parametrize("frequency", JS_LOG_FREQUENCY)
+@pytest.mark.parametrize(
+    "frequency", [e.value for e in EnhancedReportOperationFrequency]
+)
 def test_js_logs(frequency):
     logger.info("Clean up folder ")
     clean_up_report_directories(frequency)
