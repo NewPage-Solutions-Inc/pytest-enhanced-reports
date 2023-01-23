@@ -1,5 +1,5 @@
 import json
-from os import getcwd, path, curdir, makedirs
+from os import getcwd, path, curdir, makedirs, listdir
 from shutil import rmtree
 from subprocess import Popen
 import pytest
@@ -83,26 +83,15 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
                     actual_files.append(
                         f"{current_dir}/{frequency}/" + attachment.get("source")
                     )
+    # collect js_logs in attachment
+    for attachment in output["attachments"]:
+        if "Logs from browser console" in attachment.get("name"):
+            actual_files.append(
+                f"{current_dir}/{frequency}/" + attachment.get("source")
+            )
 
-    expected_files = []
     data_path_prefix = f"{current_dir}/data/js_logs/{frequency}"
-    if frequency == "always":
-        expected_files.append(f"{data_path_prefix}/first_attachment.txt")
-        expected_files.append(f"{data_path_prefix}/second_attachment.txt")
-    elif frequency in ["failed_test_only", "end_of_each_test"]:
-        expected_files.append(f"{data_path_prefix}/attachment.txt")
-
-        # collect js_logs in attachment
-        if frequency in ["failed_test_only", "end_of_each_test"]:
-            for attachment in output["attachments"]:
-                if "Logs from browser console" in attachment.get("name"):
-                    actual_files.append(
-                        f"{current_dir}/{frequency}/" + attachment.get("source")
-                    )
-    else:
-        # each_ui_operation
-        for i in range(1, 7):
-            expected_files.append(f"{data_path_prefix}/{i}-attachment.txt")
+    expected_files = [f for f in listdir(data_path_prefix) if path.isfile(path.join(data_path_prefix, f))]
 
     assert len(actual_files) == len(
         expected_files
