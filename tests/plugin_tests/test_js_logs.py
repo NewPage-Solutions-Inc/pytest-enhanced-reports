@@ -18,11 +18,6 @@ RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
 --report_browser_console_log_capture='{1}' \
 normal_tests"
 
-RUN_PLUGIN_TESTS = "pytest -vv --disable-warnings \
---headless=True \
---report_browser_console_log_capture='{0}' \
-plugin_tests"
-
 
 @pytest.mark.parametrize(
     "frequency", [e.value for e in EnhancedReportOperationFrequency]
