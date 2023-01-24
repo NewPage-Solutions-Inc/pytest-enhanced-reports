@@ -1,9 +1,10 @@
 name: tests for plugin
 
-pull_request:
-  branches:
-    - main
-    - release*
+on:
+  pull_request:
+    branches:
+      - main
+      - release*
 
 jobs:
   build:
