@@ -32,3 +32,12 @@ def clean_up_report_directories(report_dir):
     if path.exists(path.join(curdir, report_dir)):
         rmtree(path.join(curdir, report_dir))
     makedirs(path.join(curdir, report_dir), exist_ok=True)
+
+
+def collect_files_from_report(source, name, path_prefix):
+    output = []
+    if source.get("attachments"):
+        for attachment in source["attachments"]:
+            if name in attachment.get("name"):
+                output.append(f"{path_prefix}/" + attachment.get("source"))
+    return output

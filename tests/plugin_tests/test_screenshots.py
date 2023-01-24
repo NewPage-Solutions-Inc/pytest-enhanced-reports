@@ -2,21 +2,13 @@ import cv2
 import numpy as np
 import json
 import pytest
-from os import getcwd
+from os import getcwd, path, listdir
 from subprocess import Popen
-from tests.step_defs.shared_steps import *  # noqa
 from tests.util import util
 import logging
+from enhanced_reports.config import EnhancedReportOperationFrequency
 
 logger = logging.getLogger(__name__)
-
-SCREENSHOT_FREQUENCY = [
-    "always",
-    "each_ui_operation",
-    "end_of_each_test",
-    "failed_test_only",
-    "never",
-]
 
 TIMEOUT = 120  # 120 seconds timeout for running normal tests
 
@@ -26,13 +18,10 @@ RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
 --report_screenshot_capture='{1}' \
 normal_tests"
 
-RUN_PLUGIN_TESTS = "pytest -vv --disable-warnings \
---headless=True \
---report_screenshot_capture='{0}' \
-plugin_tests"
 
-
-@pytest.mark.parametrize("frequency", SCREENSHOT_FREQUENCY)
+@pytest.mark.parametrize(
+    "frequency", [e.value for e in EnhancedReportOperationFrequency]
+)
 def test_screenshot(frequency):
     logger.info("Clean up folder ")
     util.clean_up_report_directories(frequency)
@@ -79,38 +68,31 @@ def verify_screenshot_with_params(current_dir, frequency, scenario):
         assert False, "Test was not run successfully or file not found!"
 
     actual_files = []
-    # collect screenshots in steps
+    actual_report_dir = f"{current_dir}/{frequency}/"
+    # collect screenshots in steps (output > steps > attachments)
     for step in output["steps"]:
-        if step.get("attachments"):
-            for attachment in step.get("attachments"):
-                if "Screenshot" in attachment.get("name"):
-                    actual_files.append(
-                        f"{current_dir}/{frequency}/" + attachment.get("source")
-                    )
+        actual_files.extend(
+            util.collect_files_from_report(
+                step, "Screenshot", actual_report_dir
+            )
+        )
+    # collect screenshots in attachment (output > attachments)
+    actual_files.extend(
+        util.collect_files_from_report(output, "Screenshot", actual_report_dir)
+    )
 
-    expected_files = []
     data_path_prefix = f"{current_dir}/data/screenshots/{frequency}"
-    if frequency == "always":
-        for i in range(3):
-            expected_files.append(f"{data_path_prefix}/{i+1}-attachment.png")
-    elif frequency in ["failed_test_only", "end_of_each_test"]:
-        expected_files.append(f"{data_path_prefix}/attachment.png")
+    expected_files = [
+        path.join(data_path_prefix, f)
+        for f in listdir(data_path_prefix)
+        if path.isfile(path.join(data_path_prefix, f))
+    ]
+    expected_files = sorted(expected_files, key=lambda x: path.basename(x))
 
-    # collect screenshots in attachment
-    if frequency in ["failed_test_only", "end_of_each_test", "always"]:
-        for attachment in output["attachments"]:
-            if "Screenshot" in attachment.get("name"):
-                actual_files.append(
-                    f"{current_dir}/{frequency}/" + attachment.get("source")
-                )
-    else:
-        # each_ui_operation
-        for i in range(6):
-            expected_files.append(f"{data_path_prefix}/{i+1}-attachment.png")
-
+    # compare number of screenshots
     assert len(actual_files) == len(
         expected_files
-    ), "number of screenshots files are different"
+    ), "number of screenshots are different"
 
     for i in range(len(expected_files)):
         actual_image = cv2.imread(actual_files[i])
