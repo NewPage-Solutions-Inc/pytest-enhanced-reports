@@ -1,1 +1,0 @@
-"Element firstName is focused!"
