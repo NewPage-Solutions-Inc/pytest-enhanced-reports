@@ -16,3 +16,11 @@ def find_newest_report(test_name, report_dir="reports") -> str:
             content = json.load(f)
             if content.get("name") == test_name:
                 return a_file
+
+
+def count_file_match(extension: str, report_dir: str) -> str:
+    """Helper to count matching files with extension inside the  report folder"""
+    files = list(
+        filter(path.isfile, glob.glob(f"{getcwd()}/{report_dir}/{extension}"))
+    )
+    return len(files)

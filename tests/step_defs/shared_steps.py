@@ -34,6 +34,7 @@ def open_second_page(driver):
     check_second_page_displayed(driver)
 
 
+@when(parsers.parse("User enters first name {first_name}"))
 def enter_first_name(driver, first_name):
     first_name_field = driver.find_element(*FIRST_NAME)
     first_name_field.send_keys(first_name)

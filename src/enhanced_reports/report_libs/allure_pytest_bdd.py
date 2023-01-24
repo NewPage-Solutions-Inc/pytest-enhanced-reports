@@ -61,9 +61,9 @@ def update_test_results_for_scenario_outline():
                 test_result.parameters = adj_parameters
 
             for index in range(0, len(test_result.steps)):
-                if ':\n|' in test_result.steps[index].name:
+                if ":\n|" in test_result.steps[index].name:
                     # Remove the data table from the step name
-                    step_desc = test_result.steps[index].name.split(':')
+                    step_desc = test_result.steps[index].name.split(":")
                     test_result.steps[index].name = step_desc[0]
 
             plugin_manager.hook.report_result(result=test_result)
