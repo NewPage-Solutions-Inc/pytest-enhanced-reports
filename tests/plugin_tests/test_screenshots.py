@@ -110,4 +110,4 @@ def verify_screenshot_with_params(current_dir, frequency, scenario):
             mse = err / (height * width)
             assert (
                 mse == 0.0 or mse <= 0.1
-            ), f"image is different {expected_files[i]} s {actual_files[i]} vs "
+            ), f"image is different {actual_files[i]} vs {expected_files[i]} "
