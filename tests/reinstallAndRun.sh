@@ -13,5 +13,4 @@ fi
 
 mkdir -p reports
 #pytest -vv --disable-warnings --headless=False --report_browser_console_log_capture='always' --alluredir='reports'
-pytest -vv --disable-warnings --alluredir='reports' plugin_tests/
-
+pytest -vv --disable-warnings --alluredir='reports' normal_tests/
