@@ -1,5 +1,5 @@
 import json
-from os import getcwd, path, listdir, walk
+from os import getcwd, path, walk
 from subprocess import Popen
 import pytest
 import logging
