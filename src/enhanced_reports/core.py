@@ -28,29 +28,27 @@ from . import common_utils
 from . import config
 from .config import EnhancedReportOperationFrequency as OpFreq, Parameter
 
-
 logger = logging.getLogger(__name__)
 logger.info("Loaded " + __file__)
-
 
 # region Global Vars
 __currently_applicable_reports: List[ModuleType] = []
 __report_options: Dict[Parameter, Any] = {}
+
+
 # endregion
 
 
 # region Registering and retrieving config parameters
 def pytest_addoption(parser: argparsing.Parser):
-    logger.debug("Entered Adoption" + inspect.currentframe().f_code.co_name)
+    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     group = parser.getgroup("enhanced-report")
     config.register_with(group)
 
 
 @fixture(scope="session", autouse=True)
 def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
-    logger.debug(
-        "Entered Report Options" + inspect.currentframe().f_code.co_name
-    )
+    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
@@ -362,7 +360,6 @@ def __is_pytest_plugin_installed(
 def _reports(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ) -> List[ModuleType]:
-
     logger.debug("Entered Reports" + inspect.currentframe().f_code.co_name)
 
     # region Teardown
@@ -486,7 +483,6 @@ def enhance_driver(
     logger.debug("Entered " + inspect.currentframe().f_code.co_name)
 
     def _enhanced_driver_getter(driver: WebDriver):
-
         _local_driver["driver"] = driver
 
         return EventFiringWebDriver(
