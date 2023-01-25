@@ -5,5 +5,5 @@ pytest-bdd
 allure-pytest-bdd
 pytest-order
 pre-commit
-
-../src/
+opencv-python
+numpy

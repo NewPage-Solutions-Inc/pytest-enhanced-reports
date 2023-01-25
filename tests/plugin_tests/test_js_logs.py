@@ -1,6 +1,5 @@
 import json
-from os import getcwd, path, curdir, makedirs, listdir
-from shutil import rmtree
+from os import getcwd, path, listdir
 from subprocess import Popen
 import pytest
 import logging
@@ -24,7 +23,7 @@ normal_tests"
 )
 def test_js_logs(frequency):
     logger.info("Clean up folder ")
-    clean_up_report_directories(frequency)
+    util.clean_up_report_directories(frequency)
 
     logger.info(f"Start running NORMAL tests: js_log_frequency={frequency}...")
     test_process = Popen(
@@ -68,9 +67,17 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
     actual_report_dir = f"{current_dir}/{frequency}/"
     # collect js_logs in steps (output > steps > attachments)
     for step in output["steps"]:
-        actual_files.extend(collect_js_logs(step, actual_report_dir))
+        actual_files.extend(
+            util.collect_files_from_report(
+                step, "Logs from browser console", actual_report_dir
+            )
+        )
     # collect js_logs in attachment (output > attachments)
-    actual_files.extend(collect_js_logs(output, actual_report_dir))
+    actual_files.extend(
+        util.collect_files_from_report(
+            output, "Logs from browser console", actual_report_dir
+        )
+    )
 
     data_path_prefix = f"{current_dir}/data/js_logs/{frequency}"
     expected_files = [
@@ -99,21 +106,6 @@ def verify_js_logs_with_params(current_dir, frequency, scenario):
             assert compare_js_logs_without_timespan(
                 actual_file_content[j], expected_file_content[j]
             ), f"js logs are different {actual_file_content[j]} vs {expected_file_content[j]}"
-
-
-def clean_up_report_directories(report_dir):
-    if path.exists(path.join(curdir, report_dir)):
-        rmtree(path.join(curdir, report_dir))
-    makedirs(path.join(curdir, report_dir), exist_ok=True)
-
-
-def collect_js_logs(source, path_prefix):
-    output = []
-    if source.get("attachments"):
-        for attachment in source["attachments"]:
-            if "Logs from browser console" in attachment.get("name"):
-                output.append(f"{path_prefix}/" + attachment.get("source"))
-    return output
 
 
 def compare_js_logs_without_timespan(actual, expect):
