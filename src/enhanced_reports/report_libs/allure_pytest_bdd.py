@@ -67,7 +67,7 @@ def update_test_results_for_scenario_outline():
     remove the params which are equals to '_pytest_bdd_example'. This param if included in test results, causes
     errors in report generation due to duplicate keys in the json
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     def _custom_write_test_case(self, uuid=None):
         """Allure has an open bug (https://github.com/allure-framework/allure-python/issues/636) which prevents the
@@ -102,7 +102,7 @@ def wrapper_for_unexecuted_steps():
     To overcome this issue we are intercepting the PytestBDDListener._scenario_finalizer method to add the
     non executed steps to test results
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     @wrapt.patch_function_wrapper(PytestBDDListener, "_scenario_finalizer")
     def wrap_scenario_finalizer(wrapped, instance, args, kwargs):

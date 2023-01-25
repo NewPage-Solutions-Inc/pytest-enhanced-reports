@@ -14,7 +14,7 @@ def get_js_logs(driver: WebDriver) -> str:
     @param driver: Instance of a Webdriver.
     @return: Return formatted output string.
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     logs = _capture_output(driver)
     return _format_outputs(logs)
 

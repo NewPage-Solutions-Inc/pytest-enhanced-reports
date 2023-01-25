@@ -41,14 +41,14 @@ __report_options: Dict[Parameter, Any] = {}
 
 # region Registering and retrieving config parameters
 def pytest_addoption(parser: argparsing.Parser):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     group = parser.getgroup("enhanced-report")
     config.register_with(group)
 
 
 @fixture(scope="session", autouse=True)
 def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
@@ -154,7 +154,7 @@ def __can_record(
     @return: Return True or False
     """
     # Get the config value for the current type
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     param_value = __report_options[__attachment_and_config[attachment_type]]
     logger.info(f"current param_value {param_value}")
     if (
@@ -199,7 +199,7 @@ def __report_data_handler(
     @param kwargs: Provide any related args of EnhancedReportAttachments
     """
     logger.debug(
-        "Entered Report Data Handler" + inspect.currentframe().f_code.co_name
+        logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     )
     for report_mod in __currently_applicable_reports:
         try:
@@ -236,7 +236,7 @@ def __capture_ss(
     @param element: Provide an element
     @return:
     """
-    logger.debug("Entered Capture SS" + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     if not __can_record(attachment_type, state):
         return
 
@@ -271,7 +271,7 @@ def __capture_js_logs(
     @param label: Provide label as string
     @return: Return none for alert as a special case.
     """
-    logger.debug("Entered JS Logs" + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     if not __can_record(EnhancedReportAttachments.JS_LOG, state):
         return
 
@@ -291,9 +291,7 @@ def __capture_js_logs(
 def _global_config(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ):
-    logger.debug(
-        "Entered Global Config" + inspect.currentframe().f_code.co_name
-    )
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def remove_test_dir():
@@ -360,7 +358,7 @@ def __is_pytest_plugin_installed(
 def _reports(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ) -> List[ModuleType]:
-    logger.debug("Entered Reports" + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def report_specific_cleanup():
@@ -417,9 +415,7 @@ def _reports_function_scope(
     _reports: List[ModuleType],
     _report_options: Dict[Parameter, Any],
 ):
-    logger.debug(
-        "Entered Reports Function Scope" + inspect.currentframe().f_code.co_name
-    )
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def report_specific_cleanup():
@@ -480,7 +476,7 @@ def enhance_driver(
     _report_options: Dict[Parameter, Any],
     _local_driver,
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     def _enhanced_driver_getter(driver: WebDriver):
         _local_driver["driver"] = driver
@@ -508,9 +504,7 @@ def _video_capture(
     _scenario_name: str,
     _report_options: Dict[Parameter, Any],
 ):
-    logger.debug(
-        "Entered Video Capture" + inspect.currentframe().f_code.co_name
-    )
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     screen_recorder = {}
     recorder_thread = None
     if __can_record(
@@ -607,9 +601,7 @@ def pytest_bdd_after_scenario(request: FixtureRequest, feature, scenario):
 def _create_wrappers(
     request: FixtureRequest, _report_options: Dict[Parameter, Any]
 ):
-    logger.debug(
-        "Entered create wrappers" + inspect.currentframe().f_code.co_name
-    )
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     current_state = EnhancedReportTestState.AFTER_UI_OPERATION
     op_name = "after action chain"
 

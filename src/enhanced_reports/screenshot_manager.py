@@ -35,7 +35,7 @@ def get_screenshot(
     @param driver: Provide the driver instance
     @return: Return image path
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     # selenium can't take screenshots if a browser alert/prompt is open. trying to do so would break the current test.
     # so, skipping screenshots in such a case
     if expected_conditions.alert_is_present()(driver):
@@ -69,7 +69,7 @@ def get_highlighted_screenshot(
     @param border_width: Provide border width
     @return: return path of an image
     """
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     def apply_style(s):
         driver.execute_script(
