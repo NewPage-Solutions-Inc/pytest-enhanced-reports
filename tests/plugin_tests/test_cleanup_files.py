@@ -22,36 +22,36 @@ normal_tests"
 
 
 @pytest.mark.parametrize(
-    "keep_screenshot, keep_video",
+    "keep_screenshots, keep_videos",
     [(True, True), (True, False), (False, True), (False, False)],
 )
-def test_keep_files(keep_screenshot, keep_video):
+def test_keep_files(keep_screenshots, keep_videos):
     report_dir = "keep_files"
     logger.info("Clean up folder")
     util.clean_up_report_directories(report_dir)
 
     logger.info(
-        f"Start running NORMAL tests: keep_screenshot={keep_screenshot}, keep_video={keep_video}..."
+        f"Start running NORMAL tests: keep_screenshots={keep_screenshots}, keep_videos={keep_videos}..."
     )
     test_process = Popen(
-        RUN_NORMAL_TESTS.format(report_dir, keep_screenshot, keep_video),
+        RUN_NORMAL_TESTS.format(report_dir, keep_screenshots, keep_videos),
         shell=True,
     )
     test_process.wait(TIMEOUT)
 
     logger.info(
-        f"Start running PLUGIN tests: keep_screenshot={keep_screenshot}, keep_video={keep_video}..."
+        f"Start running PLUGIN tests: keep_screenshots={keep_screenshots}, keep_videos={keep_videos}..."
     )
-    verify_keep_files(keep_screenshot, keep_video, report_dir)
+    verify_keep_files(keep_screenshots, keep_videos, report_dir)
 
 
-def verify_keep_files(keep_screenshot, keep_video, report_dir="keep_files"):
+def verify_keep_files(keep_screenshots, keep_videos, report_dir="keep_files"):
     curr_dir = getcwd()
     scenarios = ["Run Test for browser's outputs", "Failed test only"]
     actual_screenshot_files = util.count_file_match(".png", report_dir)
     actual_video_files = util.count_file_match(".png", report_dir)
     # screenshot
-    if keep_screenshot:
+    if keep_screenshots:
         # collect all png files in report dir
         observe_files = len(
             [
@@ -68,12 +68,15 @@ def verify_keep_files(keep_screenshot, keep_video, report_dir="keep_files"):
         assert (
             files_in_json == observe_files
         ), f"Total screenshot files in report json {files_in_json} are different than in report dir {observe_files}"
+        assert (
+            files_in_json > 0
+        ), "There is no screenshot files in the report dir while screenshot flag is on"
     else:
         assert (
             actual_screenshot_files == 0
         ), f"There are {actual_screenshot_files} screenshots in the report folder while keep_screenshot set to False"
     # video
-    if keep_video:
+    if keep_videos:
         observe_files = len(
             [
                 y
@@ -89,6 +92,9 @@ def verify_keep_files(keep_screenshot, keep_video, report_dir="keep_files"):
         assert (
             files_in_json == observe_files
         ), f"Total video files in report json {files_in_json} are different than in report dir {observe_files}"
+        assert (
+            files_in_json > 0
+        ), "There is no video files in the report dir while video flag is on"
     else:
         assert (
             actual_video_files == 0
