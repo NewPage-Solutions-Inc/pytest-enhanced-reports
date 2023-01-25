@@ -13,6 +13,7 @@ from pytest import fixture
 
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.abstract_event_listener import (
     AbstractEventListener,
 )
@@ -27,27 +28,27 @@ from . import common_utils
 from . import config
 from .config import EnhancedReportOperationFrequency as OpFreq, Parameter
 
-
 logger = logging.getLogger(__name__)
 logger.info("Loaded " + __file__)
-
 
 # region Global Vars
 __currently_applicable_reports: List[ModuleType] = []
 __report_options: Dict[Parameter, Any] = {}
+
+
 # endregion
 
 
 # region Registering and retrieving config parameters
 def pytest_addoption(parser: argparsing.Parser):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     group = parser.getgroup("enhanced-report")
     config.register_with(group)
 
 
 @fixture(scope="session", autouse=True)
 def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
@@ -144,9 +145,16 @@ __attachment_and_config: Dict[EnhancedReportAttachments, Parameter] = {
 def __can_record(
     attachment_type: EnhancedReportAttachments,
     current_state: EnhancedReportTestState,
-):
+) -> bool:
+    """
+    This method returns True or False based on enhancement report attachment type and enhanced report state.
+    @param attachment_type: Provide attachment type as VIDEO, TXT and SS_WITH_HIGHLIGHT
+    @param current_state: Provide enhanced report state as "before test", "custom during test",
+    "after test", "before ui operation", "after ui operation", "error", "failed", "passed", "skipped".
+    @return: Return True or False
+    """
     # Get the config value for the current type
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     param_value = __report_options[__attachment_and_config[attachment_type]]
     logger.info(f"current param_value {param_value}")
     if (
@@ -169,21 +177,35 @@ def __can_record(
             or __report_options[Parameter.SS_FREQUENCY]
             not in __state_and_allowed_frequencies[current_state]
         ):
-            # logger.debug("Rejection reason: Highlighted screenshots are either not enabled, or they're not allowed in this state")
+            # logger.debug("Rejection reason: Highlighted screenshots are either not enabled, or they're not allowed
+            # in this state")
             can_record = False
 
-    # logger.debug(f"Recording {attachment_type} is {'' if can_record else 'NOT '}allowed in state - {current_state}")
+    # logger.debug(f"Recording {attachment_type} is {'' if can_record else 'NOT '} allowed in state - {current_state}")
     return can_record
 
 
 def __report_data_handler(
-    attachment_type: EnhancedReportAttachments, name: str, value: str, **kwargs
+    attachment_type: EnhancedReportAttachments,
+    attachment_name: str,
+    attachment_value: str,
+    **kwargs,
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    """
+    This method call the attachment methods dynamic like attach_text, attach_image and attach_video
+    @param attachment_type: Provide attachment type as JS_LOG, SS, SS_WITH_HIGHLIGHT and VIDEO
+    @param attachment_name: Provide label as a string like text, image and video
+    @param attachment_value: Provide path as a string
+    @param kwargs: Provide any related args of EnhancedReportAttachments
+    """
+    logger.debug(
+        logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
+    )
     for report_mod in __currently_applicable_reports:
         try:
+            # Form a method Ex: attach_text(attachment_name, attachment_value)
             getattr(report_mod, f"attach_{attachment_type.value[0]}")(
-                name, value, **kwargs
+                attachment_name, attachment_value, **kwargs
             )
         except Exception as e:
             logger.error(
@@ -198,12 +220,23 @@ def __report_data_handler(
 def __capture_ss(
     attachment_type: EnhancedReportAttachments,
     state: EnhancedReportTestState,
-    scenario_name,
-    name,
-    driver,
+    scenario_name: str,
+    name: str,
+    driver: WebDriver,
     element=None,
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    """
+    Capture screenshots of a scenario for every action of a highlighted element
+    @param attachment_type: Provide attachment type as VIDEO, TXT, SS and SS_WITH_HIGHLIGHT
+    @param state: Provide enhanced report state as "before test", "custom during test",
+    "after test", "before ui operation", "after ui operation", "error", "failed", "passed", "skipped".
+    @param scenario_name: Provide scenario name
+    @param name: Provide action name or screenshot name
+    @param driver: Provide instance of a driver
+    @param element: Provide an element
+    @return:
+    """
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     if not __can_record(attachment_type, state):
         return
 
@@ -211,6 +244,7 @@ def __capture_ss(
         attachment_type == EnhancedReportAttachments.SS_WITH_HIGHLIGHT
         and element
     ):
+
         path: str = screenshot_manager.get_highlighted_screenshot(
             element, name, scenario_name, __report_options, driver
         )
@@ -226,8 +260,18 @@ def __capture_ss(
         )
 
 
-def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def __capture_js_logs(
+    state: EnhancedReportTestState, driver: WebDriver, label: str
+):
+    """
+    Capture JavaScript Logs
+    @param state: Provide enhanced report state as "before test", "custom during test",
+    "after test", "before ui operation", "after ui operation", "error", "failed", "passed", "skipped".
+    @param driver: Provide driver instance
+    @param label: Provide label as string
+    @return: Return none for alert as a special case.
+    """
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     if not __can_record(EnhancedReportAttachments.JS_LOG, state):
         return
 
@@ -244,8 +288,10 @@ def __capture_js_logs(state: EnhancedReportTestState, driver, label: str):
 
 # region Report agnostic setup and teardown
 @fixture(scope="session", autouse=True)
-def _global_config(request, _report_options):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def _global_config(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+):
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def remove_test_dir():
@@ -279,6 +325,11 @@ def _global_config(request, _report_options):
 
 # region Local utils
 def __get_all_module_names_in_relative_path(path: str) -> List[str]:
+    """
+    Getting the absolute path to the current file, and removing the file name to get the current directory
+    @param path: Provide directory path
+    @return: Return list of strings
+    """
     import pkgutil
     import os
 
@@ -290,6 +341,12 @@ def __get_all_module_names_in_relative_path(path: str) -> List[str]:
 def __is_pytest_plugin_installed(
     request: FixtureRequest, plugin_name: str
 ) -> bool:
+    """
+    Return true or false boolean value is the pytest plugin installed
+    @param request: The request fixture is a special fixture providing information of the requesting test function.
+    @param plugin_name: Provide plugin name
+    @return: Return True or False
+    """
     return request.config.pluginmanager.has_plugin(plugin_name)
 
 
@@ -298,8 +355,10 @@ def __is_pytest_plugin_installed(
 
 # region handling report lib integrations
 @fixture(scope="session", autouse=True)
-def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def _reports(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+) -> List[ModuleType]:
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def report_specific_cleanup():
@@ -309,9 +368,9 @@ def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
                     "Calling session scoped teardown for " + report_mod.__name__
                 )
                 report_mod.perform_session_cleanup(request, _report_options)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
-                    f"Error while performing session level cleanup for report {report_mod.__name__}: {e}"
+                    f"Error while performing session level cleanup for report {report_mod.__name__}: {exc}"
                 )
 
     request.addfinalizer(report_specific_cleanup)
@@ -351,8 +410,12 @@ def _reports(request: FixtureRequest, _report_options) -> List[ModuleType]:
 
 
 @fixture(autouse=True)
-def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def _reports_function_scope(
+    request: FixtureRequest,
+    _reports: List[ModuleType],
+    _report_options: Dict[Parameter, Any],
+):
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     # region Teardown
     def report_specific_cleanup():
@@ -363,9 +426,9 @@ def _reports_function_scope(request: FixtureRequest, _reports, _report_options):
                     + report_mod.__name__
                 )
                 report_mod.perform_function_cleanup(request, _report_options)
-            except Exception as e:
+            except Exception as exc:
                 logger.error(
-                    f"Error while performing cleanup for function scope for report {report_mod.__name__}: {e}"
+                    f"Error while performing cleanup for function scope for report {report_mod.__name__}: {exc}"
                 )
 
     request.addfinalizer(report_specific_cleanup)
@@ -408,11 +471,14 @@ def _local_driver() -> Dict[str, WebDriver]:
 
 
 @fixture  # TODO: test this with a session scoped fixture in the test framework for instantiating the driver
-def enhance_driver(request, _report_options, _local_driver):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def enhance_driver(
+    request: FixtureRequest,
+    _report_options: Dict[Parameter, Any],
+    _local_driver,
+):
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     def _enhanced_driver_getter(driver: WebDriver):
-
         _local_driver["driver"] = driver
 
         return EventFiringWebDriver(
@@ -434,9 +500,11 @@ def enhance_driver(request, _report_options, _local_driver):
 # region Video recording
 @fixture(autouse=True)
 def _video_capture(
-    request, _scenario_name, _report_options: Dict[Parameter, Any]
+    request: FixtureRequest,
+    _scenario_name: str,
+    _report_options: Dict[Parameter, Any],
 ):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     screen_recorder = {}
     recorder_thread = None
     if __can_record(
@@ -473,7 +541,17 @@ def _video_capture(
 
 
 # region Screenshot & js log capture
-def pytest_bdd_step_error(request, feature, scenario, step, step_func):
+def pytest_bdd_step_error(
+    request: FixtureRequest, feature, scenario, step, step_func
+):
+    """
+    Record screenshot or js logs for bdd step error
+    @param request: Provide request a fixture
+    @param feature:
+    @param scenario:
+    @param step:
+    @param step_func:
+    """
     current_state = EnhancedReportTestState.ERROR
     op_name = "after action chain"
 
@@ -493,7 +571,13 @@ def pytest_bdd_step_error(request, feature, scenario, step, step_func):
         __capture_js_logs(current_state, driver, op_name)
 
 
-def pytest_bdd_after_scenario(request, feature, scenario):
+def pytest_bdd_after_scenario(request: FixtureRequest, feature, scenario):
+    """
+    Record screenshot or js logs for after each scenario
+    @param request: Provide request a fixture
+    @param feature:
+    @param scenario:
+    """
     current_state = EnhancedReportTestState.AFTER_TEST
     op_name = "after test"
 
@@ -514,8 +598,10 @@ def pytest_bdd_after_scenario(request, feature, scenario):
 
 
 @fixture(scope="session", autouse=True)
-def _create_wrappers(request: FixtureRequest, _report_options):
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+def _create_wrappers(
+    request: FixtureRequest, _report_options: Dict[Parameter, Any]
+):
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     current_state = EnhancedReportTestState.AFTER_UI_OPERATION
     op_name = "after action chain"
 
@@ -557,7 +643,12 @@ class WebDriverEventListener(AbstractEventListener):
             [], str
         ] = scenario_name_supplier
 
-    def after_navigate_to(self, url, driver: WebDriver):
+    def after_navigate_to(self, url: str, driver: WebDriver):
+        """
+        Capture screenshot and JS logs before after navigating of an url
+        @param url: Provide an url
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name: str = f"Navigation to {url}"
         self.__capture_ss(
@@ -569,7 +660,12 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def before_click(self, element, driver):
+    def before_click(self, element: WebElement, driver: WebDriver):
+        """
+        Capture screenshot before click of an element
+        @param element: Provide web element
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.BEFORE_UI_OPERATION
         op_name: str = "before click"
         self.__capture_ss(
@@ -581,7 +677,12 @@ class WebDriverEventListener(AbstractEventListener):
             element=element,
         )
 
-    def after_click(self, element, driver):
+    def after_click(self, element: WebElement, driver: WebDriver):
+        """
+        Capture screenshot after click of an element
+        @param element: Provide web element
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name: str = "after click"
         self.__capture_ss(
@@ -593,7 +694,12 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def before_change_value_of(self, element, driver):
+    def before_change_value_of(self, element: WebElement, driver: WebDriver):
+        """
+        Capture screenshot before keyboard input
+        @param element: Provide web element
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.BEFORE_UI_OPERATION
         op_name = "before keyboard input"
         self.__capture_ss(
@@ -605,7 +711,12 @@ class WebDriverEventListener(AbstractEventListener):
             element=element,
         )
 
-    def after_change_value_of(self, element, driver):
+    def after_change_value_of(self, element: WebElement, driver: WebDriver):
+        """
+        Capture screenshot after keyboard input
+        @param element: Provide web element
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name = "after keyboard input"
         self.__capture_ss(
@@ -619,7 +730,11 @@ class WebDriverEventListener(AbstractEventListener):
             EnhancedReportTestState.AFTER_UI_OPERATION, driver, op_name
         )
 
-    def after_execute_script(self, script, driver):
+    def after_execute_script(self, driver: WebDriver):
+        """
+        Capture screenshot after JS execution
+        @param driver: Provide instance of a driver
+        """
         current_state = EnhancedReportTestState.AFTER_UI_OPERATION
         op_name = "after JS execution"
         self.__capture_ss(
@@ -631,7 +746,11 @@ class WebDriverEventListener(AbstractEventListener):
         )
         self.__capture_js_logs(current_state, driver, op_name)
 
-    def after_navigate_back(self, driver):
+    def after_navigate_back(self, driver: WebDriver):
+        """
+        Capture JS logs for navigating back
+        @param driver: Provide driver instance.
+        """
         self.__capture_js_logs(
             EnhancedReportTestState.AFTER_UI_OPERATION,
             driver,

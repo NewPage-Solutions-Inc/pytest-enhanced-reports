@@ -27,7 +27,15 @@ __resize_factor: float = None
 def get_screenshot(
     screenshot_name: str, scenario_name: str, plugin_options, driver: WebDriver
 ) -> str:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    """
+    Return the screenshot for the scenario name
+    @param screenshot_name: Provide the screenshot name
+    @param scenario_name: Provide the scenario name
+    @param plugin_options: Provide plugin options contains video_height and video_width
+    @param driver: Provide the driver instance
+    @return: Return image path
+    """
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     # selenium can't take screenshots if a browser alert/prompt is open. trying to do so would break the current test.
     # so, skipping screenshots in such a case
     if expected_conditions.alert_is_present()(driver):
@@ -50,7 +58,18 @@ def get_highlighted_screenshot(
     color: str = "red",
     border_width: int = 5,
 ) -> str:
-    logger.debug("Entered " + inspect.currentframe().f_code.co_name)
+    """
+    Return an image path for the web element action
+    @param element: Provide web element
+    @param action_name: Provide action name
+    @param scenario_name: Provide Scenario name
+    @param report_options: Provide report options
+    @param driver: Provide driver instance
+    @param color: Provide color values like red, green and yellow
+    @param border_width: Provide border width
+    @return: return path of an image
+    """
+    logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
 
     def apply_style(s):
         driver.execute_script(
@@ -72,11 +91,19 @@ def get_highlighted_screenshot(
 
 
 def __get_resized_image(
-    image_bytes,
+    image_bytes: bytes,
     report_options: Dict[Parameter, Any],
-    scenario_name,
+    scenario_name: str,
     screenshot_name="screenshot",
-):
+) -> str:
+    """
+    Return resized screenshot file path
+    @param image_bytes: Provide image size in the form of bytes
+    @param report_options: Provide report options
+    @param scenario_name: Provide scenario name
+    @param screenshot_name: Provide screenshot name
+    @return: Resized screenshot file path
+    """
     global __desired_resolution, __resize_factor
     __desired_resolution = (
         __desired_resolution

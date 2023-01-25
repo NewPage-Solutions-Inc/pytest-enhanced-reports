@@ -3,6 +3,7 @@ from typing import Dict, Any, Tuple
 
 import allure
 from allure_commons.types import AttachmentType
+from selenium.webdriver.remote.webdriver import WebDriver
 from PIL import Image
 import cv2
 
@@ -26,9 +27,12 @@ class ScreenRecorder:
         self.__desired_resolution: Tuple[int, int] = None
         self.__resize_factor: float = None
 
-    def start_capturing(self, driver):
-        """This method will start capturing images and saving them on disk under /video folder
-        These images will later be used to stich together into a video"""
+    def start_capturing(self, driver: WebDriver):
+        """
+        This method will start capturing images and saving them on disk under /video folder.
+        These images will later be used to stitch together into a video.
+        @param driver: Provide instance of a driver
+        """
         try:
             count = 0
             common_utils.mkdir(self.__directory)
@@ -48,9 +52,20 @@ class ScreenRecorder:
             )
 
     def create_video_from_images(
-        self, scenario_info, location, video_size: tuple, frame_rate: int
-    ):
-        """This method will stitch the images under /video directory into a video"""
+        self,
+        scenario_info: str,
+        location: str,
+        video_size: tuple,
+        frame_rate: int,
+    ) -> str:
+        """
+        This method will stitch the images under /video directory into a video.
+        @param scenario_info: Provide the scenario info
+        @param location: path to record a video
+        @param video_size: Resolution of an image contains height and width
+        @param frame_rate: Provide frame_rate and default is 30
+        @return: Return the stitch video path
+        """
         fourcc = cv2.VideoWriter_fourcc(*"vp09")
         video_name = f"{location}/{scenario_info}.webm"
         video = cv2.VideoWriter(video_name, fourcc, int(frame_rate), video_size)
@@ -86,6 +101,13 @@ class ScreenRecorder:
         scenario_info,
         attachment_name,
     ):
+        """
+        This method stop recording and attach stitch video of a scenario
+        @param report_options: Provide the report options
+        @param recorder_thread: Provide the record thread
+        @param scenario_info: Provide the scenario info
+        @param attachment_name: Provide the attachment name
+        """
         try:
             self.stop = True
             recorder_thread.join()
@@ -119,7 +141,14 @@ class ScreenRecorder:
             # Now clean the images directory
             common_utils.delete_dir(self.__directory)
 
-    def get_video_resize_resolution(self, report_options: Dict[Parameter, Any]):
+    def get_video_resize_resolution(
+        self, report_options: Dict[Parameter, Any]
+    ) -> Tuple[int, int]:
+        """
+        Return resize resolution of a Video
+        @param report_options: Report options contains default width and height
+        @return: Return new width and height in Tuple format
+        """
         try:
             directory = self.__directory
             desired_resolution = (
