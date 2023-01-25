@@ -14,6 +14,8 @@ TIMEOUT = 120  # 120 seconds timeout for running normal tests
 RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
 --headless=True \
 --alluredir='{}' \
+--report_screenshot_capture='each_ui_operation' \
+--report_video_recording=True \
 --report_keep_screenshots='{}' \
 --report_keep_videos='{}' \
 normal_tests"
