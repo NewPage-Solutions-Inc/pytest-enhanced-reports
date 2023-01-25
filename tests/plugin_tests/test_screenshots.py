@@ -59,26 +59,8 @@ def verify_screenshot(frequency):
 
 
 def verify_screenshot_with_params(current_dir, frequency, scenario):
-    actual_report_file = util.find_newest_report(scenario, frequency)
-
-    with open(actual_report_file) as f:
-        output = json.load(f)
-
-    if not output:
-        assert False, "Test was not run successfully or file not found!"
-
-    actual_files = []
-    actual_report_dir = f"{current_dir}/{frequency}/"
-    # collect screenshots in steps (output > steps > attachments)
-    for step in output["steps"]:
-        actual_files.extend(
-            util.collect_files_from_report(
-                step, "Screenshot", actual_report_dir
-            )
-        )
-    # collect screenshots in attachment (output > attachments)
-    actual_files.extend(
-        util.collect_files_from_report(output, "Screenshot", actual_report_dir)
+    actual_files = util.collect_files_in_report_json(
+        current_dir, frequency, scenario, "Screenshot"
     )
 
     data_path_prefix = f"{current_dir}/data/screenshots/{frequency}"

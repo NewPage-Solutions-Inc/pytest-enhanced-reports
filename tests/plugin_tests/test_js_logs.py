@@ -54,31 +54,9 @@ def verify_js_logs(js_log_frequency):
 
 
 def verify_js_logs_with_params(current_dir, frequency, scenario):
-    actual_file = util.find_newest_report(scenario, frequency)
-
-    # read report file (to get all js log files in ordered)
-    with open(actual_file) as f:
-        output = json.load(f)
-
-    if not output:
-        assert False, "Test was not run successfully or file not found!"
-
-    actual_files = []
-    actual_report_dir = f"{current_dir}/{frequency}/"
-    # collect js_logs in steps (output > steps > attachments)
-    for step in output["steps"]:
-        actual_files.extend(
-            util.collect_files_from_report(
-                step, "Logs from browser console", actual_report_dir
-            )
-        )
-    # collect js_logs in attachment (output > attachments)
-    actual_files.extend(
-        util.collect_files_from_report(
-            output, "Logs from browser console", actual_report_dir
-        )
+    actual_files = util.collect_files_in_report_json(
+        current_dir, frequency, scenario, "Logs from browser console"
     )
-
     data_path_prefix = f"{current_dir}/data/js_logs/{frequency}"
     expected_files = [
         path.join(data_path_prefix, f)
