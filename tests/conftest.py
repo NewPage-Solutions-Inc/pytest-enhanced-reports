@@ -34,11 +34,12 @@ def old_driver(request):
     import os
 
     driver_path = os.getenv("CHROMEWEBDRIVER")
-    service = (
-        ChromeService(executable_path=driver_path)
-        if driver_path
-        else ChromeService(ChromeDriverManager().install())
-    )
+    if driver_path:
+        service = ChromeService(executable_path=driver_path)
+        logger.debug(f"DRIVER_PATH FOUND {driver_path}")
+    else:
+        service = ChromeService(ChromeDriverManager().install())
+        logger.debug(f"DRIVER_PATH NOT FOUND {service}")
 
     return webdriver.Chrome(
         desired_capabilities=caps, options=chrome_options, service=service
