@@ -1,4 +1,3 @@
-import json
 from os import getcwd, path, walk
 from subprocess import Popen
 import pytest
@@ -13,11 +12,13 @@ TIMEOUT = 120  # 120 seconds timeout for running normal tests
 
 RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
 --headless=True \
---alluredir='{}' \
+--alluredir='{0}' \
 --report_screenshot_capture='each_ui_operation' \
 --report_video_recording=True \
---report_keep_screenshots='{}' \
---report_keep_videos='{}' \
+--report_keep_screenshots='{1}' \
+--report_keep_videos='{2}' \
+--report_screenshot_dir='{0}/screenshot' \
+--report_video_dir='{0}' \
 normal_tests"
 
 
@@ -59,25 +60,23 @@ def verify_keep_files_screenshots(
         ]
     )
 
-    if keep_screenshots:
-        # collect all png files in report dir
-        files_in_json = 0
-        for scenario in scenarios:
-            files_in_json += len(
-                util.collect_files_in_report_json(
-                    curr_dir, report_dir, scenario, "Screenshot"
-                )
+    # collect all png files in report dir
+    files_in_json = 0
+    for scenario in scenarios:
+        files_in_json += len(
+            util.collect_files_in_report_json(
+                curr_dir, report_dir, scenario, "Screenshot"
             )
+        )
+
+    if keep_screenshots:
         assert (
-            files_in_json == observe_files
-        ), f"Total screenshot files in report json {files_in_json} are different than in report dir {observe_files}"
-        assert (
-            files_in_json > 0
-        ), "There is no screenshot files in the report dir while screenshot flag is on"
+            files_in_json < observe_files
+        ), f"Total screenshot files in report json {files_in_json} are LESS than in report dir {observe_files} while keep_screenshots set to True"
     else:
         assert (
-            observe_files == 0
-        ), f"There are {observe_files} screenshots in the report folder while keep_screenshot set to False"
+            observe_files == files_in_json
+        ), f"Total screenshot files in report json {files_in_json} are NOT EQUAL with files in report directory {observe_files} while keep_screenshot set to False"
 
 
 def verify_keep_files_videos(keep_videos, scenarios, report_dir="keep_files"):
@@ -89,22 +88,17 @@ def verify_keep_files_videos(keep_videos, scenarios, report_dir="keep_files"):
             for y in glob(path.join(x[0], "*.webm"))
         ]
     )
-
-    if keep_videos:
-        files_in_json = 0
-        for scenario in scenarios:
-            files_in_json += len(
-                util.collect_files_in_report_json(
-                    curr_dir, report_dir, scenario, "Video"
-                )
+    files_in_json = 0
+    for scenario in scenarios:
+        files_in_json += len(
+            util.collect_files_in_report_json(
+                curr_dir, report_dir, scenario, "Video"
             )
-        assert (
-            files_in_json == observe_files
-        ), f"Total video files in report json {files_in_json} are different than in report dir {observe_files}"
-        assert (
-            files_in_json > 0
-        ), "There is no video files in the report dir while video flag is on"
-    else:
-        assert (
-            observe_files == 0
-        ), f"There are {observe_files} videos in the report folder while keep_video set to False"
+        )
+    assert (
+        files_in_json > 0
+    ), f"Video feature is not working while keep_videos set to {keep_videos}"
+
+    assert (
+        observe_files == files_in_json
+    ), f"Total video files in report json {files_in_json} are NOT EQUAL in report dir {observe_files} while keep_video = {keep_videos}"
