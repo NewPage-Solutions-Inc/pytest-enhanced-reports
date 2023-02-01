@@ -152,7 +152,7 @@ def _get_value(request: FixtureRequest, parameter: Parameter):
     # Cast the value to the specified type, if needed
     if "cast_to" in __params[parameter]:
         if __params[parameter]["cast_to"] == bool:
-            return value in ["True", "true", "TRUE"]
+            return value.lower() == "true"
         else:
             value = __params[parameter]["cast_to"](value)
     return value
