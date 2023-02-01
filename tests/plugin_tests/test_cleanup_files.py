@@ -18,7 +18,7 @@ RUN_NORMAL_TESTS = "pytest -vv --disable-warnings \
 --report_keep_screenshots='{1}' \
 --report_keep_videos='{2}' \
 --report_screenshot_dir='{0}/screenshot' \
---report_video_dir='{0}' \
+--report_video_dir='{0}/video' \
 normal_tests"
 
 
