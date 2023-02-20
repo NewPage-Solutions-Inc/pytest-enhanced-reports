@@ -34,6 +34,7 @@ logger.info("Loaded " + __file__)
 # region Global Vars
 __currently_applicable_reports: List[ModuleType] = []
 __report_options: Dict[Parameter, Any] = {}
+__failed_report: List[Any] = []
 
 
 # endregion
@@ -52,6 +53,21 @@ def _report_options(request: FixtureRequest) -> Dict[Parameter, Any]:
     __report_options.update(config.get_all_values(request))
     # logger.info("Report options: \n"+"\n".join([str(item) for item in __report_options.items()]))
     return __report_options
+
+
+@fixture(scope="function", autouse=True)
+def _attach_failures_reports(request):
+    """Check the test and attach to a report only test fails"""
+    __failed_report
+    yield
+    if __failed_report and request.session.Failed:
+        for failed_report in __failed_report:
+            __attach_to_reports(
+                failed_report.attachment_type,
+                failed_report.attachment_name,
+                failed_report.attachment_value,
+                **failed_report.kwargs,
+            )
 
 
 # endregion
@@ -91,6 +107,22 @@ class EnhancedReportTestState(enum.Enum):
     FAILED = "failed"
     PASSED = "passed"
     SKIPPED = "skipped"
+
+
+class Attachment:
+    """Model for the attachments"""
+
+    def __init__(
+        self,
+        attachment_type: EnhancedReportAttachments,
+        attachment_name: str,
+        attachment_value: str,
+        **kwargs,
+    ):
+        self.attachment_type = attachment_type
+        self.attachment_name = attachment_name
+        self.attachment_value = attachment_value
+        self.kwargs = kwargs
 
 
 # endregion
@@ -185,6 +217,25 @@ def __can_record(
     return can_record
 
 
+def __attach_to_reports(
+    attachment_type: EnhancedReportAttachments,
+    attachment_name: str,
+    attachment_value: str,
+    **kwargs,
+):
+    """Attach js logs, screenshots and video to the allure reports"""
+    for report_mod in __currently_applicable_reports:
+        try:
+            # Form a method Ex: attach_text(attachment_name, attachment_value)
+            getattr(report_mod, f"attach_{attachment_type.value[0]}")(
+                attachment_name, attachment_value, **kwargs
+            )
+        except Exception as e:
+            logger.error(
+                f"Error while attaching {attachment_type.value[1]} to report {report_mod}: {e}"
+            )
+
+
 def __report_data_handler(
     attachment_type: EnhancedReportAttachments,
     attachment_name: str,
@@ -201,16 +252,15 @@ def __report_data_handler(
     logger.debug(
         logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     )
-    for report_mod in __currently_applicable_reports:
-        try:
-            # Form a method Ex: attach_text(attachment_name, attachment_value)
-            getattr(report_mod, f"attach_{attachment_type.value[0]}")(
-                attachment_name, attachment_value, **kwargs
-            )
-        except Exception as e:
-            logger.error(
-                f"Error while attaching {attachment_type.value[1]} to report {report_mod}: {e}"
-            )
+    frequency_value = __report_options[__attachment_and_config[attachment_type]]
+    if frequency_value.value in ["failed_test_only", "always"]:
+        __failed_report.append(
+            Attachment(attachment_type, attachment_name, attachment_value)
+        )
+    else:
+        __attach_to_reports(
+            attachment_type, attachment_name, attachment_value, **kwargs
+        )
 
 
 # endregion
@@ -254,7 +304,8 @@ def __capture_ss(
         )
 
     logger.debug(f"Captured screenshot path: {path}")
-    if path:  # there is a chance that a screenshot was not captured
+    if path:
+        # there is a chance that a screenshot was not captured
         __report_data_handler(
             attachment_type, EnhancedReportLabels.SS_WITH_DESC.desc(name), path
         )
@@ -276,6 +327,7 @@ def __capture_js_logs(
         return
 
     logs = browser_console_manager.get_js_logs(driver)
+
     __report_data_handler(
         EnhancedReportAttachments.JS_LOG,
         EnhancedReportLabels.JS_LOGS_WITH_DESC.desc(label),
