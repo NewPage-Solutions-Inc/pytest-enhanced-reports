@@ -131,4 +131,9 @@ dmypy.json
 
 .idea
 deb
-reports
+tests/always
+tests/each_ui_operation
+tests/end_of_each_test
+tests/failed_test_only
+tests/never
+
