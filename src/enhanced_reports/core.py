@@ -253,7 +253,7 @@ def __report_data_handler(
         logger.debug(f"Entered {inspect.currentframe().f_code.co_name}")
     )
     frequency_value = __report_options[__attachment_and_config[attachment_type]]
-    if frequency_value.value in ["failed_test_only", "always"]:
+    if frequency_value.value == "failed_test_only":
         __failed_report.append(
             Attachment(attachment_type, attachment_name, attachment_value)
         )
