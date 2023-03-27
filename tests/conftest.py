@@ -26,11 +26,12 @@ def pytest_addoption(parser):
 def old_driver(request):
     browser = request.config.getoption("--driver")
     caps = {"goog:loggingPrefs": {"browser": "ALL"}}
+    window_size = "1024,768"
     headless = request.config.getoption("--headless") == "True"
     logger.error(browser)
     if not browser or browser.lower() in ["chrome", "gc", "googlechrome"]:
         chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--window-size=1024,768")
+        chrome_options.add_argument(f"--window-size={window_size}")
 
         if headless:
             chrome_options.add_argument("--headless")
@@ -52,6 +53,7 @@ def old_driver(request):
         options = FirefoxOptions()
         if headless:
             options.add_argument("--headless")
+        options.add_argument(f"--window-size={window_size}")
 
         return webdriver.Firefox(desired_capabilities=caps, options=options)
 
