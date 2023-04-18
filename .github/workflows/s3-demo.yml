@@ -1,80 +1,31 @@
-name: basic workflow testing
+name: tests for plugin
+
 on:
+  pull_request:
+    branches:
+      - main
+      - release*
+
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
-# S3 structure
-# | ${{ github.repository }}
-# |___history: contains historical data for trend + graphs
-# |___1/reports
-# |___2/reports
-# ...
-
     steps:
     - uses: actions/checkout@v3
 
-    - name: install dependencies
-      run: |
-        pip install -r tests/requirements.txt
-
-    - name: install allure
-      run: |
-        curl -o allure-2.19.0.tgz -Ls https://github.com/allure-framework/allure2/releases/download/2.19.0/allure-2.19.0.tgz
-        tar -zxvf allure-2.19.0.tgz -C /opt/
-        chmod +x /opt/allure-2.19.0/bin/allure
-        /opt/allure-2.19.0/bin/allure --version
-
-    - name: run tests
-      run: |
-        tests/run.sh
-
-    - name: download old reports from s3
-      continue-on-error: true
-      uses: keithweaver/aws-s3-github-action@v1.0.0
+    - uses: actions/setup-python@v4
       with:
-        command: cp
-        source: ${{ secrets.AWS_BUCKET }}/${{ github.repository }}/history
-        destination: .
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-east-1
-        flags: --recursive
+        python-version: '3.9'
 
-    - name: test if old reports were downloaded successfully
+    - name: Install dependencies
       run: |
-        ls -lahG
+        cd tests
+        pip install -r ./test-reqs.txt
+        pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pytest-enhanced-reports
 
-    - name: generate allure reports
+    - name: Basic tests
       run: |
-        cd reports
-        cp -r ../history . || echo "no history folder found in root!"
-        /opt/allure-2.19.0/bin/allure generate . --clean
-        cp -r allure-report/history ..
-        rm -rf history
-
-# todo:
-# 1. remove old files in S3 before uploading new files?
-
-    - name: upload history to S3
-      uses: keithweaver/aws-s3-github-action@v1.0.0
-      with:
-        command: cp
-        source: history
-        destination: s3://np-allure-reports/${{ github.repository }}/history
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-east-1
-        flags: --recursive
-
-    - name: upload reports to S3
-      uses: keithweaver/aws-s3-github-action@v1.0.0
-      with:
-        command: cp
-        source: reports
-        destination: s3://np-allure-reports/${{ github.repository }}/${{ github.run_number }}
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-east-1
-        flags: --recursive
+        cd tests
+        ./run.sh
