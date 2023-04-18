@@ -5,5 +5,3 @@ pytest-bdd == 5.0.0
 allure-pytest-bdd == 2.9.45
 pytest-order == 1.0.1
 pre-commit == 2.20.0
-
-../src/
