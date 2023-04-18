@@ -6,6 +6,8 @@ on:
       - main
       - release*
 
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,8 +23,9 @@ jobs:
       run: |
         cd tests
         pip install -r ./test-reqs.txt
+        pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pytest-enhanced-reports
 
     - name: Basic tests
       run: |
         cd tests
-        ./reinstallAndRun.sh
+        ./run.sh
